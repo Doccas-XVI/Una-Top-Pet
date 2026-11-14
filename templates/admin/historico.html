@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+{% block titulo %}Histórico de saúde{% endblock %}
+{% block conteudo %}
+<div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+  <div>
+    <h1 class="text-2xl font-bold">Histórico de saúde</h1>
+    {% if animal %}<p class="text-sm text-slate-600 mt-1">🐾 <strong>{{ animal.nome }}</strong> · {{ animal.especie }}, {{ animal.raca }} · tutor: {{ animal.tutor }}</p>{% endif %}
+  </div>
+  <a href="{{ url_for('admin_historico_form', animal=animal_id if animal_id else none) }}" class="px-4 py-2 rounded-xl bg-accent hover:bg-orange-600 text-white text-sm font-semibold">+ Novo registro</a>
+</div>
+
+<form method="get" class="flex flex-wrap gap-3 items-center mb-4 text-sm">
+  <select name="animal" class="px-3 py-2 rounded-xl border border-slate-300 bg-white">
+    <option value="">Todos os animais</option>
+    {% for a in animais %}<option value="{{ a.ID_animal }}" {{ 'selected' if animal_id == a.ID_animal|string }}>{{ a.nome }}</option>{% endfor %}
+  </select>
+  <input type="search" name="q" value="{{ q }}" placeholder="Pesquisar na descrição, tipo, tutor…" class="px-3.5 py-2 rounded-xl border border-slate-300 w-72 focus:outline-none focus:border-primary" />
+  <label class="flex items-center gap-2 text-slate-600"><input type="checkbox" name="inativos" value="1" {{ 'checked' if inativos }} /> mostrar excluídos</label>
+  <button class="px-4 py-2 rounded-xl bg-primary text-white font-semibold">Filtrar</button>
+  <a href="{{ url_for('admin_historico') }}" class="text-slate-500 underline">limpar</a>
+</form>
+
+{% if linhas %}
+<div class="space-y-3">
+  {% for h in linhas %}
+  <article class="bg-white rounded-2xl border border-slate-200 p-4 {{ 'opacity-50' if not h.Ativo }}">
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="px-2.5 py-0.5 rounded-md bg-teal-50 text-primary text-xs font-bold">{{ h.tipo_registro or 'Registro' }}</span>
+        <a href="{{ url_for('admin_historico', animal=h.ID_animal) }}" class="font-semibold hover:underline">🐾 {{ h.animal }}</a>
+        <span class="text-xs text-slate-500">tutor: {{ h.tutor }}</span>
+        {% if not h.Ativo %}<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">excluído</span>{% endif %}
+      </div>
+      <span class="text-xs text-slate-500">{{ h.data_registro|datahora_br }} · {{ h.profissional }}{% if h.ID_Agendamento %} · agend. #{{ h.ID_Agendamento }}{% endif %}</span>
+    </div>
+    <p class="text-sm text-slate-700 mt-2 whitespace-pre-line">{{ h.descricao }}</p>
+    {% if anexos.get(h.ID_historico) %}
+      <div class="mt-2 flex flex-wrap gap-2">
+        {% for a in anexos[h.ID_historico] %}
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-[11px] text-slate-600">📎 {{ a.tipo_midia or 'anexo' }}:
+            {% if a.url_midia.startswith('http://') or a.url_midia.startswith('https://') %}<a href="{{ a.url_midia }}" target="_blank" rel="noopener" class="underline">{{ a.url_midia[:50] }}</a>{% else %}{{ a.url_midia }}{% endif %}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="mt-3 flex gap-1.5 justify-end">
+      {% if h.Ativo %}
+        <a href="{{ url_for('admin_historico_form', rid=h.ID_historico) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">Editar</a>
+        <form method="post" action="{{ url_for('admin_historico_inativar', rid=h.ID_historico) }}" onsubmit="return confirm('Excluir este registro do histórico? Ele fica preservado e pode ser reativado.')">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+          <button class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold">Excluir</button>
+        </form>
+      {% else %}
+        <form method="post" action="{{ url_for('admin_historico_reativar', rid=h.ID_historico) }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+          <button class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-primary text-xs font-semibold">Reativar</button>
+        </form>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-8 text-center">Nenhum registro de saúde encontrado.</p>
+{% endif %}
+{% endblock %}

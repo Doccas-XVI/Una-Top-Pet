@@ -1,0 +1,54 @@
+{# Tabela de agendamentos reutilizada no painel e na listagem. Espera a variável `linhas`. #}
+<div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+<table class="w-full text-sm">
+  <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+    <tr>
+      <th class="text-left px-4 py-2.5">Data e hora</th>
+      <th class="text-left px-4 py-2.5">Animal / Tutor</th>
+      <th class="text-left px-4 py-2.5">Serviço</th>
+      <th class="text-left px-4 py-2.5">Profissional</th>
+      <th class="text-left px-4 py-2.5">Status</th>
+      <th class="text-right px-4 py-2.5">Ações</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for a in linhas %}
+    <tr class="{{ 'opacity-60' if a.status == 'Cancelado' }}">
+      <td class="px-4 py-3 whitespace-nowrap font-medium">{{ a.Data_Hora|datahora_br }}</td>
+      <td class="px-4 py-3"><strong>{{ a.animal }}</strong><br><span class="text-xs text-slate-500">{{ a.cliente }}</span></td>
+      <td class="px-4 py-3">{{ a.servico }}<br><span class="text-xs text-slate-500">{{ a.preco|brl }}{% if a.duracao_min %} · {{ a.duracao_min }} min{% endif %}</span></td>
+      <td class="px-4 py-3">{{ a.profissional }}</td>
+      <td class="px-4 py-3">
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold
+          {{ 'bg-orange-50 text-accent' if a.status == 'Agendado' else ('bg-teal-50 text-primary' if a.status == 'Realizado' else 'bg-slate-100 text-slate-500') }}">{{ a.status }}</span>
+        {% if a.ultima_notif %}<br><span class="text-[10px] text-slate-400">🔔 avisado {{ a.ultima_notif|datahora_br }}</span>{% endif %}
+      </td>
+      <td class="px-4 py-3 text-right">
+        <div class="flex flex-wrap gap-1.5 justify-end">
+        {% if a.status == 'Agendado' %}
+          <form method="post" action="{{ url_for('admin_agendamento_realizado', rid=a.ID_Agendamento) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+            <button class="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-semibold" title="Marcar como Realizado">✔ Realizado</button>
+          </form>
+          <a href="{{ url_for('admin_historico_form', agendamento=a.ID_Agendamento) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold" title="Registrar atendimento no histórico (conclui o agendamento)">📋 Atendimento</a>
+          <form method="post" action="{{ url_for('admin_agendamento_notificar', rid=a.ID_Agendamento) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+            <button class="px-2.5 py-1 rounded-lg bg-accent hover:bg-orange-600 text-white text-xs font-semibold" title="Avisar o tutor no aplicativo que o animal está pronto para buscar">🔔 Pronto p/ buscar</button>
+          </form>
+          {% set wa = link_whatsapp(a.cliente_tel, mensagem_pronto(a.animal, a.cliente)) %}
+          {% if wa %}<a href="{{ wa }}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-green-100 text-green-800 text-xs font-semibold" title="Abrir WhatsApp com a mensagem pronta">WhatsApp</a>{% endif %}
+          <a href="{{ url_for('admin_agendamento_form', rid=a.ID_Agendamento) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">Reagendar</a>
+          <form method="post" action="{{ url_for('admin_agendamento_cancelar', rid=a.ID_Agendamento) }}" onsubmit="return confirm('Cancelar este agendamento?')">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+            <button class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold">Cancelar</button>
+          </form>
+        {% elif a.status == 'Realizado' %}
+          <a href="{{ url_for('admin_historico', animal=a.ID_Animal) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">Ver histórico</a>
+        {% else %}<span class="text-xs text-slate-400">—</span>{% endif %}
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>

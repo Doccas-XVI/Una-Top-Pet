@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block titulo %}Administração{% endblock %} • UnaTopPet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = { theme: { extend: {
+      fontFamily: { sans: ['Inter', 'sans-serif'] },
+      colors: { primary: '#0F766E', primaryLight: '#0D9488', accent: '#F97316', bgLight: '#F8F9FA' }
+    } } };
+  </script>
+</head>
+<body class="bg-bgLight font-sans text-slate-800 min-h-screen md:flex">
+
+  {# ---------- Menu lateral ---------- #}
+  {% set menu = [
+    ('admin_painel', {}, '🏠', 'Painel'),
+    ('admin_lista', {'ent': 'clientes'}, '👤', 'Clientes'),
+    ('admin_lista', {'ent': 'animais'}, '🐾', 'Animais'),
+    ('admin_lista', {'ent': 'profissionais'}, '🩺', 'Profissionais'),
+    ('admin_lista', {'ent': 'servicos'}, '🛁', 'Serviços'),
+    ('admin_agendamentos', {}, '📅', 'Agendamentos'),
+    ('admin_historico', {}, '📋', 'Histórico de saúde'),
+    ('admin_notificacoes', {}, '🔔', 'Notificações'),
+    ('admin_log', {}, '🧾', 'Log de alterações'),
+  ] %}
+  <aside class="bg-primary text-white md:w-60 md:min-h-screen shrink-0 md:flex md:flex-col">
+    <div class="px-5 py-4 flex items-center gap-3 border-b border-white/20">
+      <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-lg">🐶</div>
+      <div><p class="font-bold leading-tight">UnaTopPet</p><p class="text-[11px] text-teal-100">Área administrativa</p></div>
+    </div>
+    <nav class="flex md:flex-col overflow-x-auto md:overflow-visible p-2 gap-1 text-sm">
+      {% for endpoint, args, icone, rotulo in menu %}
+        {% set ativo = request.endpoint == endpoint and (not args or args.ent == request.view_args.get('ent')) %}
+        <a href="{{ url_for(endpoint, **args) }}"
+           class="whitespace-nowrap px-3 py-2 rounded-lg font-medium {{ 'bg-white text-primary' if ativo else 'text-teal-50 hover:bg-white/10' }}">
+          {{ icone }} {{ rotulo }}
+        </a>
+      {% endfor %}
+    </nav>
+    <div class="mt-auto p-3 border-t border-white/20 text-xs space-y-2 hidden md:block">
+      <a href="{{ url_for('admin_backup') }}" class="block px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-center font-semibold">💾 Baixar backup do banco</a>
+      <p class="text-teal-100 px-1">Logado como <strong>{{ session.admin_nome }}</strong></p>
+      <form method="post" action="{{ url_for('admin_logout') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+        <button class="w-full px-3 py-2 rounded-lg bg-black/20 hover:bg-black/30 font-semibold">Sair</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-4 md:p-8 max-w-6xl w-full">
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% for categoria, texto in mensagens %}
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm font-medium border
+                    {{ 'bg-teal-50 border-teal-200 text-teal-900' if categoria == 'ok' else 'bg-red-50 border-red-200 text-red-800' }}">
+          {{ texto }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>

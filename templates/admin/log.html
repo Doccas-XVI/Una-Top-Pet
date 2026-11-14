@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% block titulo %}Log de alterações{% endblock %}
+{% block conteudo %}
+<h1 class="text-2xl font-bold mb-1">Log de alterações</h1>
+<p class="text-sm text-slate-500 mb-4">Data e usuário responsável por toda alteração feita nos cadastros (RF11). Mostra as 300 mais recentes.</p>
+<form method="get" class="flex gap-3 mb-4 text-sm">
+  <input type="search" name="q" value="{{ q }}" placeholder="Filtrar por usuário, tabela, ação…" class="px-3.5 py-2 rounded-xl border border-slate-300 w-72" />
+  <button class="px-4 py-2 rounded-xl bg-primary text-white font-semibold">Filtrar</button>
+</form>
+<div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+<table class="w-full text-xs">
+  <thead class="bg-slate-50 text-slate-500 uppercase"><tr>
+    <th class="text-left px-3 py-2.5">Data/hora</th><th class="text-left px-3 py-2.5">Usuário</th><th class="text-left px-3 py-2.5">Tabela</th>
+    <th class="text-left px-3 py-2.5">Registro</th><th class="text-left px-3 py-2.5">Ação</th><th class="text-left px-3 py-2.5">Detalhes</th>
+  </tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for l in linhas %}
+    <tr>
+      <td class="px-3 py-2 whitespace-nowrap">{{ l.Data_Hora|datahora_br }}</td>
+      <td class="px-3 py-2">{{ l.Usuario }}</td>
+      <td class="px-3 py-2">{{ l.Tabela }}</td>
+      <td class="px-3 py-2">{{ l.ID_Registro if l.ID_Registro is not none else '—' }}</td>
+      <td class="px-3 py-2 font-semibold">{{ l.Acao }}</td>
+      <td class="px-3 py-2 text-slate-600 max-w-md break-words">{{ l.Detalhes }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="px-3 py-8 text-center text-slate-400">Nenhuma alteração registrada.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block titulo %}Notificações{% endblock %}
+{% block conteudo %}
+<h1 class="text-2xl font-bold mb-1">Notificações aos tutores</h1>
+<p class="text-sm text-slate-500 mb-4">Avisos de “animal pronto para buscar”. Para enviar um novo, use o botão <strong>🔔 Pronto p/ buscar</strong> na tela de <a href="{{ url_for('admin_agendamentos', status='Agendado') }}" class="underline">Agendamentos</a>.</p>
+{% if linhas %}
+<div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+<table class="w-full text-sm">
+  <thead class="bg-slate-50 text-xs text-slate-500 uppercase"><tr>
+    <th class="text-left px-4 py-2.5">Enviada em</th><th class="text-left px-4 py-2.5">Tutor</th><th class="text-left px-4 py-2.5">Animal</th>
+    <th class="text-left px-4 py-2.5">Canal</th><th class="text-left px-4 py-2.5">Mensagem</th><th class="text-left px-4 py-2.5">Lida no app?</th>
+  </tr></thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for n in linhas %}
+    <tr>
+      <td class="px-4 py-3 whitespace-nowrap">{{ n.Data_Envio|datahora_br }}</td>
+      <td class="px-4 py-3">{{ n.cliente }}</td>
+      <td class="px-4 py-3">{{ n.animal }}</td>
+      <td class="px-4 py-3">{{ n.Canal }}</td>
+      <td class="px-4 py-3 text-slate-600">{{ n.Mensagem }}</td>
+      <td class="px-4 py-3">{{ 'Sim' if n.Lida else 'Ainda não' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-8 text-center">Nenhuma notificação enviada ainda.</p>
+{% endif %}
+{% endblock %}

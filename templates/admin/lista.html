@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+{% block titulo %}{{ cfg.titulo }}{% endblock %}
+{% macro celula(v, fmt) %}{% if v is none or v == '' %}<span class="text-slate-300">—</span>{% elif fmt == 'data' %}{{ v|data_br }}{% elif fmt == 'moeda' %}{{ v|brl }}{% elif fmt == 'min' %}{{ v }} min{% else %}{{ v }}{% endif %}{% endmacro %}
+{% block conteudo %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-bold">{{ cfg.titulo }}</h1>
+  <a href="{{ url_for('admin_form', ent=ent) }}" class="px-4 py-2 rounded-xl bg-accent hover:bg-orange-600 text-white text-sm font-semibold">+ Novo {{ cfg.singular }}</a>
+</div>
+
+<form method="get" class="flex flex-wrap gap-3 items-center mb-4 text-sm">
+  <input type="search" name="q" value="{{ q }}" placeholder="Pesquisar…" class="px-3.5 py-2 rounded-xl border border-slate-300 w-64 focus:outline-none focus:border-primary" />
+  <label class="flex items-center gap-2 text-slate-600"><input type="checkbox" name="inativos" value="1" {{ 'checked' if inativos }} /> mostrar excluídos</label>
+  <button class="px-4 py-2 rounded-xl bg-primary text-white font-semibold">Pesquisar</button>
+  {% if q or inativos %}<a href="{{ url_for('admin_lista', ent=ent) }}" class="text-slate-500 underline">limpar</a>{% endif %}
+</form>
+
+{% if linhas %}
+<div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+<table class="w-full text-sm">
+  <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+    <tr>
+      {% for cab, chave, fmt in cfg.colunas %}<th class="text-left px-4 py-2.5">{{ cab }}</th>{% endfor %}
+      <th class="text-right px-4 py-2.5">Ações</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-slate-100">
+  {% for r in linhas %}
+    {% set rid = r[cfg.pk] %}
+    <tr class="{{ 'opacity-50' if not r['Ativo'] }}">
+      {% for cab, chave, fmt in cfg.colunas %}
+        <td class="px-4 py-3 {{ 'font-semibold' if loop.first }}">{{ celula(r[chave], fmt) }}{% if loop.first and not r['Ativo'] %} <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">excluído</span>{% endif %}</td>
+      {% endfor %}
+      <td class="px-4 py-3 text-right">
+        <div class="flex gap-1.5 justify-end flex-wrap">
+          {% for rotulo, modelo in cfg.get('acoes_extra', []) %}
+            <a href="{{ modelo.format(id=rid) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">{{ rotulo }}</a>
+          {% endfor %}
+          {% if r['Ativo'] %}
+            <a href="{{ url_for('admin_form', ent=ent, rid=rid) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">Editar</a>
+            <form method="post" action="{{ url_for('admin_inativar', ent=ent, rid=rid) }}" onsubmit="return confirm('Excluir este {{ cfg.singular }}? Os dados ficam preservados e podem ser reativados.')">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+              <button class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold">Excluir</button>
+            </form>
+          {% else %}
+            <form method="post" action="{{ url_for('admin_reativar', ent=ent, rid=rid) }}">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+              <button class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-primary text-xs font-semibold">Reativar</button>
+            </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="text-xs text-slate-500 mt-2">{{ linhas|length }} registro(s). “Excluir” faz exclusão lógica: o registro some das listas, mas o histórico é preservado.</p>
+{% else %}
+<p class="text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-8 text-center">Nenhum {{ cfg.singular }} encontrado.</p>
+{% endif %}
+{% endblock %}

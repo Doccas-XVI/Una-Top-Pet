@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pets Una - Protótipo Mobile</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#0F766E',
+            primaryLight: '#0D9488',
+            accent: '#F97316',
+            bgLight: '#F8F9FA'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Ocultar barra de rolagem mantendo funcionalidade */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Animação suave de entrada */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+  </style>
+</head>
+<body class="bg-slate-200 min-h-screen flex items-center justify-center p-0 sm:p-6 font-sans text-slate-800">
+
+  <!-- Moldura do Celular (Centralizada no Desktop, Tela Cheia no Mobile) -->
+  <div class="relative w-full h-screen sm:w-[390px] sm:h-[820px] bg-bgLight sm:rounded-[40px] sm:shadow-2xl sm:border-[8px] sm:border-slate-900 overflow-hidden flex flex-col">
+
+    <!-- Barra de Status Simulada (Visível apenas no Desktop) -->
+    <div class="hidden sm:flex items-center justify-between px-6 pt-3 pb-1.5 bg-white text-xs font-semibold text-slate-700 shrink-0">
+      <span>09:41</span>
+      <div class="w-20 h-4 bg-slate-900 rounded-full"></div>
+      <div class="flex items-center gap-1.5">
+        <span>5G</span>
+        <div class="w-5 h-2.5 border border-slate-700 rounded-sm p-[1px] flex items-center">
+          <div class="w-3.5 h-full bg-slate-800 rounded-[1px]"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Área de Toast / Notificações (Substitui alert()) -->
+    <div id="toast" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 max-w-[92%] leading-snug animate-fade-in">
+      <span id="toast-icon">✅</span>
+      <span id="toast-msg">Ação realizada!</span>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TELA 1: LOGIN E CADASTRO (TUTOR)           -->
+    <!-- ========================================== -->
+    <div id="screen-auth" class="flex-1 flex flex-col justify-between p-6 bg-white overflow-y-auto no-scrollbar">
+      <div class="mt-6">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-md">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21c-4.5-3.5-8-6.8-8-10.5A4.5 4.5 0 018.5 6c1.54 0 2.94.75 3.5 1.9C12.56 6.75 13.96 6 15.5 6A4.5 4.5 0 0120 10.5C20 14.2 16.5 17.5 12 21z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-primary tracking-tight">Pets Una</h1>
+            <p class="text-xs text-slate-500">Cuidado inteligente para o seu pet</p>
+          </div>
+        </div>
+
+        <!-- Alternador Login / Cadastro -->
+        <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
+          <button onclick="toggleAuthMode('login')" id="tab-login" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-primary shadow-sm transition">Entrar</button>
+          <button onclick="toggleAuthMode('register')" id="tab-register" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition">Criar Conta</button>
+        </div>
+
+        <!-- Formulário de Login -->
+        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
+            <input type="email" id="login-email" value="ana.mendes@email.com" required class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
+            <input type="password" id="login-senha" value="123456" required class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-primary hover:bg-primaryLight text-white font-semibold text-sm shadow-md transition active:scale-[0.98]">
+            Entrar
+          </button>
+        </form>
+
+        <!-- Formulário de Cadastro (Tutor) -->
+        <form id="form-register" onsubmit="handleRegister(event)" class="hidden space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome Completo</label>
+            <input type="text" id="reg-nome" placeholder="Ex: Maria Oliveira" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">CPF</label>
+              <input type="text" id="reg-cpf" placeholder="000.000.000-00" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Telefone</label>
+              <input type="tel" id="reg-tel" placeholder="(31) 99999-9999" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Endereço</label>
+            <input type="text" id="reg-end" placeholder="Rua, número, bairro" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
+            <input type="email" id="reg-email" placeholder="seu@email.com" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Senha (mínimo 6 caracteres)</label>
+            <input type="password" id="reg-senha" minlength="6" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-accent hover:bg-orange-600 text-white font-semibold text-sm shadow-md transition active:scale-[0.98]">
+            Cadastrar Tutor
+          </button>
+        </form>
+      </div>
+
+      <p class="text-center text-[11px] text-slate-400 mt-6">
+        Pets Una • UnaTopPet
+      </p>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CONTEÚDO PRINCIPAL DO APP (LOGADO)         -->
+    <!-- ========================================== -->
+    <div id="app-shell" class="hidden flex-1 flex flex-col overflow-hidden">
+
+      <!-- Área de Conteúdo Rolável -->
+      <main id="main-content" class="flex-1 overflow-y-auto no-scrollbar pb-20">
+
+        <!-- TELA 2: INÍCIO (DASHBOARD) -->
+        <section id="tab-home" class="p-5 space-y-5 animate-fade-in">
+          <!-- Cabeçalho -->
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-500">Bem-vindo de volta,</p>
+              <h2 id="tutor-greeting" class="text-xl font-bold text-slate-800">Olá, Carlos! 👋</h2>
+            </div>
+            <button onclick="logout()" title="Sair" class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm hover:text-accent transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Avisos do pet shop (ex.: pet pronto para buscar) -->
+          <div id="notificacoes-box" class="space-y-2"></div>
+
+          <!-- Card Destaque: Próximo Agendamento -->
+          <div id="next-appointment-card" class="bg-gradient-to-br from-primary to-primaryLight rounded-2xl p-4 text-white shadow-md">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <!-- Seção: Seus Pets (Scroll Horizontal) -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-slate-800">Seus Pets</h3>
+              <button onclick="openPetModal()" class="text-xs font-semibold text-primary hover:underline">+ Novo Pet</button>
+            </div>
+            <div id="home-pets-list" class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+              <!-- Preenchido via JS -->
+            </div>
+          </div>
+
+          <!-- Grid 2x2: Atalhos Rápidos -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 mb-3">Atalhos Rápidos</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="switchTab('agenda'); openBookingModal();" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-start gap-2 hover:border-primary transition text-left">
+                <div class="w-9 h-9 rounded-xl bg-teal-50 text-primary flex items-center justify-center text-lg">📅</div>
+                <span class="text-xs font-bold text-slate-700">Novo Agendamento</span>
+              </button>
+              <button onclick="switchTab('ai')" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-start gap-2 hover:border-accent transition text-left">
+                <div class="w-9 h-9 rounded-xl bg-orange-50 text-accent flex items-center justify-center text-lg">🤖</div>
+                <span class="text-xs font-bold text-slate-700">Triagem por IA</span>
+              </button>
+              <button onclick="switchTab('pets')" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-start gap-2 hover:border-primary transition text-left">
+                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">🩺</div>
+                <span class="text-xs font-bold text-slate-700">Histórico Médico</span>
+              </button>
+              <button onclick="switchTab('agenda')" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-start gap-2 hover:border-primary transition text-left">
+                <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">🛁</div>
+                <span class="text-xs font-bold text-slate-700">Serviços</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TELA 3: PETS (PERFIL E HISTÓRICO DE SAÚDE) -->
+        <section id="tab-pets" class="hidden p-5 space-y-4 animate-fade-in">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-slate-800">Perfil do Pet</h2>
+            <button onclick="openPetModal()" class="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold shadow-sm">+ Novo Pet</button>
+          </div>
+
+          <!-- Seletor de Pets -->
+          <div id="pets-selector" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <!-- Card de Dados do Pet Selecionado -->
+          <div id="pet-profile-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <!-- Abas Internas: Prontuário vs Dados Gerais -->
+          <div class="flex bg-slate-200/70 p-1 rounded-xl">
+            <button onclick="togglePetSubtab('history')" id="subtab-history" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-white text-primary shadow-sm transition">Prontuário / Histórico</button>
+            <button onclick="togglePetSubtab('info')" id="subtab-info" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-600 transition">Dados Gerais</button>
+          </div>
+
+          <!-- Conteúdo: Prontuário / Histórico -->
+          <div id="pet-history-content" class="space-y-3">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <!-- Conteúdo: Dados Gerais -->
+          <div id="pet-info-content" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2 text-xs">
+            <!-- Preenchido via JS -->
+          </div>
+        </section>
+
+        <!-- TELA 4: AGENDA (AGENDAMENTOS E SERVIÇOS) -->
+        <section id="tab-agenda" class="hidden p-5 space-y-4 animate-fade-in">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-slate-800">Agenda</h2>
+            <button onclick="openBookingModal()" class="px-3.5 py-2 rounded-xl bg-accent hover:bg-orange-600 text-white text-xs font-semibold shadow-sm transition">+ Agendar Serviço</button>
+          </div>
+
+          <!-- Lista de Agendamentos -->
+          <div id="agenda-list" class="space-y-3">
+            <!-- Preenchido via JS -->
+          </div>
+        </section>
+
+        <!-- TELA 5: IA VET (TRIAGEM INTELIGENTE) -->
+        <section id="tab-ai" class="hidden p-5 space-y-4 animate-fade-in">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">IA Vet • Triagem Inteligente</h2>
+            <p class="text-xs text-slate-500">Envie uma foto para análise preliminar de sintomas.</p>
+          </div>
+
+          <!-- Área de Upload / Seleção de Exemplo -->
+          <div class="bg-white rounded-2xl p-4 border-2 border-dashed border-slate-300 text-center space-y-3">
+            <div id="ai-preview-box" class="hidden">
+              <img id="ai-preview-img" src="" alt="Preview" class="w-full h-40 object-cover rounded-xl mb-2" />
+              <p id="ai-preview-label" class="text-xs font-semibold text-slate-700"></p>
+            </div>
+            <div id="ai-upload-placeholder" class="py-4">
+              <div class="w-12 h-12 rounded-full bg-orange-50 text-accent mx-auto flex items-center justify-center text-2xl mb-2">📸</div>
+              <p class="text-xs font-semibold text-slate-700">Selecione uma imagem de exemplo para testar:</p>
+            </div>
+
+            <div class="flex gap-2 justify-center">
+              <button onclick="selectAiSample('pele')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition">🐾 Lesão na pele</button>
+              <button onclick="selectAiSample('olho')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition">👁️ Olho irritado</button>
+            </div>
+
+            <button onclick="runAiAnalysis()" id="btn-run-ai" class="w-full py-3 rounded-xl bg-primary hover:bg-primaryLight text-white text-xs font-semibold shadow-md transition disabled:opacity-50" disabled>
+              Analisar com IA
+            </button>
+          </div>
+
+          <!-- Loading da IA -->
+          <div id="ai-loading" class="hidden bg-white rounded-2xl p-5 text-center shadow-sm border border-slate-100">
+            <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p class="text-xs font-semibold text-slate-600">Processando imagem com IA Vet...</p>
+          </div>
+
+          <!-- Card de Resultado (Analise_IA) -->
+          <div id="ai-result-card" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 animate-fade-in">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-primary uppercase tracking-wider">Resultado da Análise</span>
+              <span id="ai-confidence-badge" class="px-2.5 py-0.5 rounded-full bg-teal-50 text-primary text-[11px] font-bold">89% confiança</span>
+            </div>
+
+            <!-- Barra de Confiança -->
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div id="ai-confidence-bar" class="bg-primary h-full rounded-full transition-all duration-500" style="width: 89%"></div>
+            </div>
+
+            <p id="ai-result-text" class="text-xs text-slate-700 leading-relaxed"></p>
+
+            <!-- Aviso Legal -->
+            <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 text-[11px] text-orange-800">
+              ⚠️ <strong>Aviso:</strong> Esta análise é apenas orientativa e não substitui a avaliação presencial de um médico veterinário.
+            </div>
+
+            <button onclick="switchTab('agenda'); openBookingModal();" class="w-full py-3 rounded-xl bg-accent hover:bg-orange-600 text-white text-xs font-semibold shadow-sm transition">
+              Agendar Consulta com Veterinário
+            </button>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- BARRA DE NAVEGAÇÃO INFERIOR FIXA (4 ABAS) -->
+      <nav class="bg-white border-t border-slate-200 h-16 px-4 flex items-center justify-around shrink-0 z-20">
+        <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center gap-1 text-primary font-semibold w-16">
+          <span class="text-lg">🏠</span>
+          <span class="text-[10px]">Início</span>
+        </button>
+        <button onclick="switchTab('pets')" id="nav-pets" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-medium w-16">
+          <span class="text-lg">🐾</span>
+          <span class="text-[10px]">Pets</span>
+        </button>
+        <button onclick="switchTab('agenda')" id="nav-agenda" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-medium w-16">
+          <span class="text-lg">📅</span>
+          <span class="text-[10px]">Agenda</span>
+        </button>
+        <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-medium w-16">
+          <span class="text-lg">🤖</span>
+          <span class="text-[10px]">IA Vet</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: CADASTRAR NOVO PET                  -->
+    <!-- ========================================== -->
+    <div id="modal-pet" class="hidden absolute inset-0 bg-slate-900/50 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-fade-in">
+        <div class="flex items-center justify-between">
+          <h3 id="pet-modal-title" class="text-base font-bold text-slate-800">Cadastrar Novo Pet</h3>
+          <button onclick="closePetModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+        </div>
+        <form onsubmit="handleSavePet(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Pet</label>
+            <input type="text" id="pet-nome" placeholder="Ex: Thor" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Espécie</label>
+              <select id="pet-especie" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-primary">
+                <option value="Canina">Cão</option>
+                <option value="Felina">Gato</option>
+                <option value="Ave">Ave</option>
+                <option value="Outra">Outro</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Raça</label>
+              <input type="text" id="pet-raca" placeholder="Ex: Labrador" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Porte</label>
+              <select id="pet-porte" class="w-full px-2.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-white">
+                <option value="Pequeno">Pequeno</option>
+                <option value="Médio">Médio</option>
+                <option value="Grande">Grande</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Sexo</label>
+              <select id="pet-sexo" class="w-full px-2.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-white">
+                <option value="M">Macho</option>
+                <option value="F">Fêmea</option>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Data de nascimento (opcional)</label>
+              <input type="date" id="pet-nasc" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm" />
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-primary hover:bg-primaryLight text-white font-semibold text-sm shadow-md">
+            Salvar Pet
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: NOVO AGENDAMENTO                    -->
+    <!-- ========================================== -->
+    <div id="modal-booking" class="hidden absolute inset-0 bg-slate-900/50 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85%] overflow-y-auto no-scrollbar animate-fade-in">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-slate-800">Novo Agendamento</h3>
+          <button onclick="closeBookingModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+        </div>
+        <form onsubmit="handleAddBooking(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">1. Escolha o Pet</label>
+            <select id="book-pet" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">2. Escolha o Serviço</label>
+            <select id="book-service" onchange="updateBookingProfs()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">3. Escolha o Profissional</label>
+            <select id="book-prof" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">4. Data e Horário</label>
+            <input type="datetime-local" id="book-datetime" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm" />
+          </div>
+          <p class="text-[11px] text-slate-500">O horário é conferido com a agenda do profissional e o funcionamento do pet shop ao confirmar.</p>
+          <button type="submit" class="w-full py-3 rounded-xl bg-accent hover:bg-orange-600 text-white font-semibold text-sm shadow-md">
+            Confirmar Agendamento
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT: DADOS FICTÍCIOS E LÓGICA       -->
+  <!-- ========================================== -->
+  <script src="/static/tutor/app.js"></script>
+</body>
+</html>

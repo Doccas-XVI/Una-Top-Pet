@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+Database/*_backup_v2.db

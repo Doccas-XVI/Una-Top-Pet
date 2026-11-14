@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+{% block titulo %}{{ 'Reagendar' if rid else 'Novo agendamento' }}{% endblock %}
+{% block conteudo %}
+<div class="max-w-2xl">
+  <a href="{{ url_for('admin_agendamentos') }}" class="text-xs text-slate-500 underline">← voltar para agendamentos</a>
+  <h1 class="text-2xl font-bold mt-1 mb-5">{{ 'Reagendar' if rid else 'Novo agendamento' }}</h1>
+
+  {% if erros %}
+  <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
+    <p class="font-semibold mb-1">Não foi possível salvar:</p>
+    <ul class="list-disc ml-5">{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  <form method="post" class="bg-white rounded-2xl border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+
+    <div>
+      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_Cliente">1. Cliente (tutor) <span class="text-red-600">*</span></label>
+      <select id="ID_Cliente" name="ID_Cliente" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+        <option value="">Selecione…</option>
+        {% for c in clientes %}<option value="{{ c.ID_Cliente }}" {{ 'selected' if valores.get('ID_Cliente')|string == c.ID_Cliente|string }}>{{ c.Nome }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_Animal">2. Animal <span class="text-red-600">*</span></label>
+      <select id="ID_Animal" name="ID_Animal" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white"></select>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_Servico">3. Serviço <span class="text-red-600">*</span></label>
+      <select id="ID_Servico" name="ID_Servico" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+        <option value="">Selecione…</option>
+        {% for s in servicos %}<option value="{{ s.Id_servico }}" {{ 'selected' if valores.get('ID_Servico')|string == s.Id_servico|string }}>{{ s.Nome_Servico }} ({{ s.duracao_min or '?' }} min · {{ s.Preco|brl }})</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_Profissional">4. Profissional <span class="text-red-600">*</span></label>
+      <select id="ID_Profissional" name="ID_Profissional" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white"></select>
+    </div>
+    <div class="md:col-span-2">
+      <label class="block text-xs font-semibold text-slate-600 mb-1" for="Data_Hora">5. Data e horário <span class="text-red-600">*</span></label>
+      <input id="Data_Hora" name="Data_Hora" type="datetime-local" required step="900" value="{{ valores.get('Data_Hora')|datahora_input }}"
+             class="w-full md:w-1/2 px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
+      <p class="text-[11px] text-slate-500 mt-1">Ao salvar, o sistema confere o horário de funcionamento, se o profissional está livre e se ele realiza o serviço escolhido.</p>
+    </div>
+
+    <div class="md:col-span-2 flex gap-3 pt-2">
+      <button class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primaryLight text-white font-semibold text-sm">Salvar</button>
+      <a href="{{ url_for('admin_agendamentos') }}" class="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-sm">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Animais do cliente escolhido e profissionais habilitados no serviço escolhido.
+  const DADOS = {{ dados_js|tojson }};
+  const selCliente = document.getElementById('ID_Cliente');
+  const selAnimal = document.getElementById('ID_Animal');
+  const selServico = document.getElementById('ID_Servico');
+  const selProf = document.getElementById('ID_Profissional');
+  const inicial = { animal: {{ (valores.get('ID_Animal') or '')|string|tojson }}, prof: {{ (valores.get('ID_Profissional') or '')|string|tojson }} };
+
+  function montarAnimais(selecionado) {
+    const cid = selCliente.value;
+    selAnimal.innerHTML = '';
+    selAnimal.add(new Option(cid ? 'Selecione…' : 'Escolha o cliente primeiro', ''));
+    DADOS.animais.filter(a => String(a.ID_cliente) === cid).forEach(a => {
+      const o = new Option(a.nome + ' (' + a.especie + ')', a.ID_animal);
+      o.selected = String(a.ID_animal) === String(selecionado);
+      selAnimal.add(o);
+    });
+  }
+  function montarProfissionais(selecionado) {
+    const sid = Number(selServico.value);
+    selProf.innerHTML = '';
+    selProf.add(new Option(sid ? 'Selecione…' : 'Escolha o serviço primeiro', ''));
+    DADOS.profissionais.filter(p => p.servicos.includes(sid)).forEach(p => {
+      const o = new Option(p.Nome + (p.Especialidade ? ' — ' + p.Especialidade : ''), p.ID_Profissional);
+      o.selected = String(p.ID_Profissional) === String(selecionado);
+      selProf.add(o);
+    });
+    if (sid && selProf.options.length === 1) selProf.options[0].text = 'Nenhum profissional habilitado neste serviço';
+  }
+  selCliente.addEventListener('change', () => montarAnimais(''));
+  selServico.addEventListener('change', () => montarProfissionais(''));
+  montarAnimais(inicial.animal);
+  montarProfissionais(inicial.prof);
+</script>
+{% endblock %}
