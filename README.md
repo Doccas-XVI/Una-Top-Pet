@@ -4,8 +4,12 @@ Projeto acadêmico desenvolvido para a disciplina de Banco de Dados.
 
 Sistema em **Python + Flask + SQLite**. O protótipo mobile (`pets_una_prot_tipo_mobile.html`) agora lê e grava no banco `Database/clinica_veterinaria.db`, e existe uma área administrativa para os funcionários do pet shop.
 
-<img width="511" height="568" alt="image" src="https://github.com/user-attachments/assets/2c63238b-a4c0-462b-864d-80427833c0e1" />
-<img width="1001" height="536" alt="image" src="https://github.com/user-attachments/assets/1f12d924-c65a-4e24-b7fa-8098e013944a" />
+<img width="1138" height="751" alt="image" src="https://github.com/user-attachments/assets/04d5f101-ba9d-4c57-9326-8d998fe2be84" />
+
+<img width="1304" height="600" alt="image" src="https://github.com/user-attachments/assets/47135c4a-99a4-45b8-9d54-3da7dcb3cc73" />
+
+<img width="1305" height="611" alt="image" src="https://github.com/user-attachments/assets/61b8f5b1-4907-4338-85d5-862e449f0bb3" />
+
 
 
 ## Como rodar
