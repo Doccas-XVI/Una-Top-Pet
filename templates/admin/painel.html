@@ -1,40 +1,58 @@
 {% extends "admin/base.html" %}
 {% block titulo %}Painel{% endblock %}
 {% block conteudo %}
-<h1 class="text-2xl font-bold mb-5">Painel</h1>
+<div class="flex items-center justify-between gap-3 flex-wrap mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-primary-900">Painel</h1>
+    <p class="text-xs text-primary-400 mt-0.5">Visão geral dos cadastros e agendamentos da clínica.</p>
+  </div>
+  <a href="{{ url_for('admin_agendamento_form') }}" class="btn btn-accent btn-md">
+    <svg class="ico"><use href="/static/brand/icons.svg#calendar-plus" /></svg> Novo agendamento
+  </a>
+</div>
 
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-  {% for rotulo, valor, link in [
-    ('Clientes', stats.clientes, url_for('admin_lista', ent='clientes')),
-    ('Animais', stats.animais, url_for('admin_lista', ent='animais')),
-    ('Profissionais', stats.profissionais, url_for('admin_lista', ent='profissionais')),
-    ('Serviços', stats.servicos, url_for('admin_lista', ent='servicos')),
-    ('Agendados em aberto', stats.abertos, url_for('admin_agendamentos', status='Agendado')),
-    ('Agendamentos hoje', stats.hoje, url_for('admin_agendamentos', data=hoje)),
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mb-8">
+  {% for rotulo, valor, link, icone, cor in [
+    ('Clientes', stats.clientes, url_for('admin_lista', ent='clientes'), 'user', 'tile-ink'),
+    ('Animais', stats.animais, url_for('admin_lista', ent='animais'), 'paw', 'tile-lime'),
+    ('Profissionais', stats.profissionais, url_for('admin_lista', ent='profissionais'), 'stethoscope', 'tile-mist'),
+    ('Serviços', stats.servicos, url_for('admin_lista', ent='servicos'), 'scissors', 'tile-mist'),
+    ('Agendados em aberto', stats.abertos, url_for('admin_agendamentos', status='Agendado'), 'calendar', 'tile-dark'),
+    ('Agendamentos hoje', stats.hoje, url_for('admin_agendamentos', data=hoje), 'clock', 'tile-lime'),
   ] %}
-  <a href="{{ link }}" class="bg-white rounded-2xl border border-slate-200 p-4 hover:border-primary transition">
-    <p class="text-3xl font-bold text-primary">{{ valor }}</p>
-    <p class="text-xs text-slate-500 mt-1">{{ rotulo }}</p>
+  <a href="{{ link }}" class="card card-hover p-4 flex flex-col justify-between gap-3">
+    <span class="tile-icon {{ cor }} w-9 h-9 rounded-xl">
+      <svg class="ico w-4 h-4"><use href="/static/brand/icons.svg#{{ icone }}" /></svg>
+    </span>
+    <div>
+      <p class="text-3xl font-display font-bold text-primary-900 leading-none">{{ valor }}</p>
+      <p class="text-xs text-primary-400 mt-1.5 font-medium">{{ rotulo }}</p>
+    </div>
   </a>
   {% endfor %}
 </div>
 
 {% if atrasados %}
 <section class="mb-8">
-  <h2 class="font-bold text-red-700 mb-2">⚠️ Agendados com data já passada ({{ atrasados|length }})</h2>
-  <p class="text-xs text-slate-500 mb-2">Marque como Realizado ou cancele para manter a agenda em dia.</p>
+  <div class="notice notice-danger mb-3">
+    <svg class="ico w-5 h-5 mt-0.5"><use href="/static/brand/icons.svg#alert" /></svg>
+    <div>
+      <h2 class="font-bold text-sm">Agendados com data já passada ({{ atrasados|length }})</h2>
+      <p class="text-xs opacity-90 mt-0.5">Marque como Realizado ou cancele para manter a agenda em dia.</p>
+    </div>
+  </div>
   {% set linhas = atrasados %}
   {% include "admin/_tabela_agendamentos.html" with context %}
 </section>
 {% endif %}
 
 <section>
-  <div class="flex items-center justify-between mb-2">
-    <h2 class="font-bold">Próximos agendamentos</h2>
-    <a href="{{ url_for('admin_agendamento_form') }}" class="px-3.5 py-2 rounded-xl bg-accent hover:bg-orange-600 text-white text-xs font-semibold">+ Novo agendamento</a>
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-base font-bold text-primary-900">Próximos agendamentos</h2>
+    <a href="{{ url_for('admin_agendamentos') }}" class="link text-xs">Ver agenda completa</a>
   </div>
   {% set linhas = proximos %}
   {% if linhas %}{% include "admin/_tabela_agendamentos.html" with context %}
-  {% else %}<p class="text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-6 text-center">Nenhum agendamento futuro em aberto.</p>{% endif %}
+  {% else %}<p class="text-sm text-primary-400 card p-8 text-center">Nenhum agendamento futuro em aberto.</p>{% endif %}
 </section>
 {% endblock %}

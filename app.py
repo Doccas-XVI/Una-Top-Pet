@@ -183,6 +183,11 @@ def tutor_app():
     return send_from_directory(os.path.join(app.static_folder, "tutor"), "index.html")
 
 
+@app.route("/web")
+def tutor_web():
+    return send_from_directory(os.path.join(app.static_folder, "web"), "index.html")
+
+
 # ============================================================================
 # Admin: login, painel e backup
 # ============================================================================

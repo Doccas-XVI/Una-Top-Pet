@@ -1,50 +1,59 @@
 {# Tabela de agendamentos reutilizada no painel e na listagem. Espera a variável `linhas`. #}
-<div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
-<table class="w-full text-sm">
-  <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+<div class="card overflow-x-auto">
+<table class="w-full text-sm table-brand">
+  <thead class="text-xs uppercase">
     <tr>
-      <th class="text-left px-4 py-2.5">Data e hora</th>
-      <th class="text-left px-4 py-2.5">Animal / Tutor</th>
-      <th class="text-left px-4 py-2.5">Serviço</th>
-      <th class="text-left px-4 py-2.5">Profissional</th>
-      <th class="text-left px-4 py-2.5">Status</th>
-      <th class="text-right px-4 py-2.5">Ações</th>
+      <th class="text-left px-4 py-3 font-semibold">Data e hora</th>
+      <th class="text-left px-4 py-3 font-semibold">Animal / Tutor</th>
+      <th class="text-left px-4 py-3 font-semibold">Serviço</th>
+      <th class="text-left px-4 py-3 font-semibold">Profissional</th>
+      <th class="text-left px-4 py-3 font-semibold">Status</th>
+      <th class="text-right px-4 py-3 font-semibold">Ações</th>
     </tr>
   </thead>
-  <tbody class="divide-y divide-slate-100">
+  <tbody class="divide-y divide-primary-100">
   {% for a in linhas %}
     <tr class="{{ 'opacity-60' if a.status == 'Cancelado' }}">
-      <td class="px-4 py-3 whitespace-nowrap font-medium">{{ a.Data_Hora|datahora_br }}</td>
-      <td class="px-4 py-3"><strong>{{ a.animal }}</strong><br><span class="text-xs text-slate-500">{{ a.cliente }}</span></td>
-      <td class="px-4 py-3">{{ a.servico }}<br><span class="text-xs text-slate-500">{{ a.preco|brl }}{% if a.duracao_min %} · {{ a.duracao_min }} min{% endif %}</span></td>
-      <td class="px-4 py-3">{{ a.profissional }}</td>
-      <td class="px-4 py-3">
-        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold
-          {{ 'bg-orange-50 text-accent' if a.status == 'Agendado' else ('bg-teal-50 text-primary' if a.status == 'Realizado' else 'bg-slate-100 text-slate-500') }}">{{ a.status }}</span>
-        {% if a.ultima_notif %}<br><span class="text-[10px] text-slate-400">🔔 avisado {{ a.ultima_notif|datahora_br }}</span>{% endif %}
+      <td class="px-4 py-3.5 whitespace-nowrap font-semibold text-primary-900">{{ a.Data_Hora|datahora_br }}</td>
+      <td class="px-4 py-3.5"><strong class="text-primary-900">{{ a.animal }}</strong><br><span class="text-xs text-primary-400">{{ a.cliente }}</span></td>
+      <td class="px-4 py-3.5 text-primary-800">{{ a.servico }}<br><span class="text-xs text-primary-400">{{ a.preco|brl }}{% if a.duracao_min %} · {{ a.duracao_min }} min{% endif %}</span></td>
+      <td class="px-4 py-3.5 text-primary-700">{{ a.profissional }}</td>
+      <td class="px-4 py-3.5">
+        <span class="badge {{ 'badge-agendado' if a.status == 'Agendado' else ('badge-realizado' if a.status == 'Realizado' else 'badge-cancelado') }}">{{ a.status }}</span>
+        {% if a.ultima_notif %}<br><span class="inline-flex items-center gap-1 text-[10px] text-primary-400 mt-1"><svg class="ico w-3 h-3 text-accent-600"><use href="/static/brand/icons.svg#bell" /></svg> avisado {{ a.ultima_notif|datahora_br }}</span>{% endif %}
       </td>
-      <td class="px-4 py-3 text-right">
+      <td class="px-4 py-3.5 text-right">
         <div class="flex flex-wrap gap-1.5 justify-end">
         {% if a.status == 'Agendado' %}
           <form method="post" action="{{ url_for('admin_agendamento_realizado', rid=a.ID_Agendamento) }}">
             <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-            <button class="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-semibold" title="Marcar como Realizado">✔ Realizado</button>
+            <button class="btn btn-primary btn-xs" title="Marcar como Realizado">
+              <svg class="ico"><use href="/static/brand/icons.svg#check" /></svg> Realizado
+            </button>
           </form>
-          <a href="{{ url_for('admin_historico_form', agendamento=a.ID_Agendamento) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold" title="Registrar atendimento no histórico (conclui o agendamento)">📋 Atendimento</a>
+          <a href="{{ url_for('admin_historico_form', agendamento=a.ID_Agendamento) }}" class="btn btn-soft btn-xs" title="Registrar atendimento no histórico (conclui o agendamento)">
+            <svg class="ico"><use href="/static/brand/icons.svg#clipboard" /></svg> Atendimento
+          </a>
           <form method="post" action="{{ url_for('admin_agendamento_notificar', rid=a.ID_Agendamento) }}">
             <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-            <button class="px-2.5 py-1 rounded-lg bg-accent hover:bg-orange-600 text-white text-xs font-semibold" title="Avisar o tutor no aplicativo que o animal está pronto para buscar">🔔 Pronto p/ buscar</button>
+            <button class="btn btn-accent btn-xs" title="Avisar o tutor no aplicativo que o animal está pronto para buscar">
+              <svg class="ico"><use href="/static/brand/icons.svg#bell" /></svg> Pronto p/ buscar
+            </button>
           </form>
           {% set wa = link_whatsapp(a.cliente_tel, mensagem_pronto(a.animal, a.cliente)) %}
-          {% if wa %}<a href="{{ wa }}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-green-100 text-green-800 text-xs font-semibold" title="Abrir WhatsApp com a mensagem pronta">WhatsApp</a>{% endif %}
-          <a href="{{ url_for('admin_agendamento_form', rid=a.ID_Agendamento) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">Reagendar</a>
+          {% if wa %}
+            <a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-xs" title="Abrir WhatsApp com a mensagem pronta">
+              <svg class="ico"><use href="/static/brand/icons.svg#message" /></svg> WhatsApp
+            </a>
+          {% endif %}
+          <a href="{{ url_for('admin_agendamento_form', rid=a.ID_Agendamento) }}" class="btn btn-outline btn-xs">Reagendar</a>
           <form method="post" action="{{ url_for('admin_agendamento_cancelar', rid=a.ID_Agendamento) }}" onsubmit="return confirm('Cancelar este agendamento?')">
             <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-            <button class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold">Cancelar</button>
+            <button class="btn btn-danger btn-xs">Cancelar</button>
           </form>
         {% elif a.status == 'Realizado' %}
-          <a href="{{ url_for('admin_historico', animal=a.ID_Animal) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold">Ver histórico</a>
-        {% else %}<span class="text-xs text-slate-400">—</span>{% endif %}
+          <a href="{{ url_for('admin_historico', animal=a.ID_Animal) }}" class="btn btn-soft btn-xs">Ver histórico</a>
+        {% else %}<span class="text-xs text-primary-300">—</span>{% endif %}
         </div>
       </td>
     </tr>

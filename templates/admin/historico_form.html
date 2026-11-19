@@ -2,22 +2,27 @@
 {% block titulo %}{{ 'Editar registro' if rid else 'Novo registro de saúde' }}{% endblock %}
 {% block conteudo %}
 <div class="max-w-2xl">
-  <a href="{{ url_for('admin_historico') }}" class="text-xs text-slate-500 underline">← voltar para o histórico</a>
-  <h1 class="text-2xl font-bold mt-1 mb-5">{{ 'Editar registro de saúde' if rid else 'Novo registro de saúde' }}</h1>
+  <a href="{{ url_for('admin_historico') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-500 hover:text-primary-900 transition">
+    <svg class="ico w-3.5 h-3.5"><use href="/static/brand/icons.svg#arrow-left" /></svg> Voltar para o histórico
+  </a>
+  <h1 class="text-2xl font-bold text-primary-900 mt-2 mb-5">{{ 'Editar registro de saúde' if rid else 'Novo registro de saúde' }}</h1>
 
   {% if erros %}
-  <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
-    <p class="font-semibold mb-1">Corrija antes de salvar:</p>
-    <ul class="list-disc ml-5">{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul>
+  <div class="mb-5 notice notice-danger text-sm">
+    <svg class="ico w-5 h-5 mt-0.5"><use href="/static/brand/icons.svg#alert" /></svg>
+    <div>
+      <p class="font-semibold mb-1">Corrija antes de salvar:</p>
+      <ul class="list-disc ml-5 space-y-0.5">{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
   </div>
   {% endif %}
 
-  <form method="post" class="bg-white rounded-2xl border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <form method="post" class="card p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
 
     <div class="md:col-span-2">
-      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_Agendamento">Agendamento de origem (opcional)</label>
-      <select id="ID_Agendamento" name="ID_Agendamento" {{ 'disabled' if edicao }} class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white disabled:bg-slate-100">
+      <label class="label" for="ID_Agendamento">Agendamento de origem (opcional)</label>
+      <select id="ID_Agendamento" name="ID_Agendamento" {{ 'disabled' if edicao }} class="input w-full">
         <option value="">— atendimento avulso, sem agendamento —</option>
         {% for a in agendamentos %}
           <option value="{{ a.ID_Agendamento }}" data-animal="{{ a.ID_Animal }}" data-prof="{{ a.ID_Profissional }}"
@@ -26,58 +31,62 @@
           </option>
         {% endfor %}
       </select>
-      <p class="text-[11px] text-slate-500 mt-1">{{ 'O vínculo com o agendamento não pode ser alterado depois de salvo.' if edicao else 'Ao salvar com um agendamento selecionado, ele passa automaticamente para Realizado.' }}</p>
+      <p class="text-[11px] text-primary-400 mt-1.5">{{ 'O vínculo com o agendamento não pode ser alterado depois de salvo.' if edicao else 'Ao salvar com um agendamento selecionado, ele passa automaticamente para Realizado.' }}</p>
     </div>
 
     <div>
-      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_animal">Animal <span class="text-red-600">*</span></label>
-      <select id="ID_animal" name="ID_animal" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+      <label class="label" for="ID_animal">Animal <span class="text-red-600">*</span></label>
+      <select id="ID_animal" name="ID_animal" required class="input w-full">
         <option value="">Selecione…</option>
         {% for a in animais %}<option value="{{ a.ID_animal }}" {{ 'selected' if valores.get('ID_animal')|string == a.ID_animal|string }}>{{ a.nome }} — {{ a.tutor }}</option>{% endfor %}
       </select>
     </div>
     <div>
-      <label class="block text-xs font-semibold text-slate-600 mb-1" for="ID_Profissional">Profissional responsável <span class="text-red-600">*</span></label>
-      <select id="ID_Profissional" name="ID_Profissional" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+      <label class="label" for="ID_Profissional">Profissional responsável <span class="text-red-600">*</span></label>
+      <select id="ID_Profissional" name="ID_Profissional" required class="input w-full">
         <option value="">Selecione…</option>
         {% for p in profissionais %}<option value="{{ p.ID_Profissional }}" {{ 'selected' if valores.get('ID_Profissional')|string == p.ID_Profissional|string }}>{{ p.Nome }}</option>{% endfor %}
       </select>
     </div>
     <div>
-      <label class="block text-xs font-semibold text-slate-600 mb-1" for="data_registro">Data e hora <span class="text-red-600">*</span></label>
+      <label class="label" for="data_registro">Data e hora <span class="text-red-600">*</span></label>
       <input id="data_registro" name="data_registro" type="datetime-local" required value="{{ valores.get('data_registro')|datahora_input }}"
-             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
+             class="input w-full" />
     </div>
     <div>
-      <label class="block text-xs font-semibold text-slate-600 mb-1" for="tipo_registro">Tipo de registro</label>
+      <label class="label" for="tipo_registro">Tipo de registro</label>
       <input id="tipo_registro" name="tipo_registro" list="tipos" maxlength="30" value="{{ valores.get('tipo_registro') or '' }}"
-             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
+             class="input w-full" />
       <datalist id="tipos">{% for t in tipos_registro %}<option value="{{ t }}">{% endfor %}</datalist>
     </div>
     <div class="md:col-span-2">
-      <label class="block text-xs font-semibold text-slate-600 mb-1" for="descricao">Descrição do atendimento <span class="text-red-600">*</span></label>
-      <textarea id="descricao" name="descricao" rows="5" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">{{ valores.get('descricao') or '' }}</textarea>
+      <label class="label" for="descricao">Descrição do atendimento <span class="text-red-600">*</span></label>
+      <textarea id="descricao" name="descricao" rows="5" required class="input w-full">{{ valores.get('descricao') or '' }}</textarea>
     </div>
 
-    <fieldset class="md:col-span-2 border border-slate-200 rounded-xl p-4">
-      <legend class="text-xs font-semibold text-slate-600 px-1">Anexo de mídia (opcional)</legend>
+    <fieldset class="md:col-span-2 border border-primary-100 rounded-2xl p-4 bg-bgLight/50">
+      <legend class="text-xs font-semibold text-primary-600 px-2">Anexo de mídia (opcional)</legend>
       {% if anexos %}
-        <ul class="text-xs text-slate-600 mb-3 space-y-1">
-          {% for a in anexos %}<li>📎 {{ a.tipo_midia }}: {{ a.url_midia }}</li>{% endfor %}
+        <ul class="text-xs text-primary-600 mb-3 space-y-1.5">
+          {% for a in anexos %}
+            <li class="inline-flex items-center gap-1.5 mr-2"><svg class="ico w-3.5 h-3.5 text-accent-600"><use href="/static/brand/icons.svg#clip" /></svg> {{ a.tipo_midia }}: {{ a.url_midia }}</li>
+          {% endfor %}
         </ul>
       {% endif %}
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input name="anexo_url" maxlength="255" placeholder="Link ou nome do arquivo (ex.: https://… ou exame.pdf)" class="md:col-span-2 px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm" />
-        <select name="anexo_tipo" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+        <input name="anexo_url" maxlength="255" placeholder="Link ou nome do arquivo (ex.: https://… ou exame.pdf)" class="md:col-span-2 input w-full" />
+        <select name="anexo_tipo" class="input w-full">
           {% for t in tipos_midia %}<option>{{ t }}</option>{% endfor %}
         </select>
       </div>
-      <p class="text-[11px] text-slate-500 mt-2">Guarda a referência (link/caminho) do arquivo, conforme a tabela Anexo_midia.</p>
+      <p class="text-[11px] text-primary-400 mt-2">Guarda a referência (link/caminho) do arquivo, conforme a tabela Anexo_midia.</p>
     </fieldset>
 
-    <div class="md:col-span-2 flex gap-3 pt-2">
-      <button class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primaryLight text-white font-semibold text-sm">Salvar</button>
-      <a href="{{ url_for('admin_historico') }}" class="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-sm">Cancelar</a>
+    <div class="md:col-span-2 flex gap-3 pt-3 border-t border-primary-100">
+      <button class="btn btn-primary btn-md">
+        <svg class="ico"><use href="/static/brand/icons.svg#check" /></svg> Salvar
+      </button>
+      <a href="{{ url_for('admin_historico') }}" class="btn btn-soft btn-md">Cancelar</a>
     </div>
   </form>
 </div>

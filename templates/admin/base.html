@@ -3,60 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block titulo %}Administração{% endblock %} • UnaTopPet</title>
+  <meta name="theme-color" content="#2F3D41" />
+  <title>{% block titulo %}Administração{% endblock %} • UNA Top Pet</title>
+  <link rel="icon" type="image/png" href="/static/brand/favicon.png" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script>
-    tailwind.config = { theme: { extend: {
-      fontFamily: { sans: ['Inter', 'sans-serif'] },
-      colors: { primary: '#0F766E', primaryLight: '#0D9488', accent: '#F97316', bgLight: '#F8F9FA' }
-    } } };
-  </script>
+  <script src="/static/brand/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/brand/brand.css" />
 </head>
-<body class="bg-bgLight font-sans text-slate-800 min-h-screen md:flex">
+<body class="bg-bgLight font-sans text-primary-800 min-h-screen md:flex">
 
   {# ---------- Menu lateral ---------- #}
   {% set menu = [
-    ('admin_painel', {}, '🏠', 'Painel'),
-    ('admin_lista', {'ent': 'clientes'}, '👤', 'Clientes'),
-    ('admin_lista', {'ent': 'animais'}, '🐾', 'Animais'),
-    ('admin_lista', {'ent': 'profissionais'}, '🩺', 'Profissionais'),
-    ('admin_lista', {'ent': 'servicos'}, '🛁', 'Serviços'),
-    ('admin_agendamentos', {}, '📅', 'Agendamentos'),
-    ('admin_historico', {}, '📋', 'Histórico de saúde'),
-    ('admin_notificacoes', {}, '🔔', 'Notificações'),
-    ('admin_log', {}, '🧾', 'Log de alterações'),
+    ('admin_painel', {}, 'grid', 'Painel'),
+    ('admin_lista', {'ent': 'clientes'}, 'user', 'Clientes'),
+    ('admin_lista', {'ent': 'animais'}, 'paw', 'Animais'),
+    ('admin_lista', {'ent': 'profissionais'}, 'stethoscope', 'Profissionais'),
+    ('admin_lista', {'ent': 'servicos'}, 'scissors', 'Serviços'),
+    ('admin_agendamentos', {}, 'calendar', 'Agendamentos'),
+    ('admin_historico', {}, 'clipboard', 'Histórico de saúde'),
+    ('admin_notificacoes', {}, 'bell', 'Notificações'),
+    ('admin_log', {}, 'list', 'Log de alterações'),
   ] %}
-  <aside class="bg-primary text-white md:w-60 md:min-h-screen shrink-0 md:flex md:flex-col">
-    <div class="px-5 py-4 flex items-center gap-3 border-b border-white/20">
-      <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-lg">🐶</div>
-      <div><p class="font-bold leading-tight">UnaTopPet</p><p class="text-[11px] text-teal-100">Área administrativa</p></div>
+  <aside class="bg-primary-900 text-white md:w-64 md:min-h-screen shrink-0 md:flex md:flex-col md:sticky md:top-0 md:h-screen shadow-lift">
+    <!-- Marca com logo principal baseado em logo.jpeg -->
+    <div class="px-4 py-4 border-b border-white/10 flex items-center justify-between gap-3 md:block">
+      <a href="{{ url_for('admin_painel') }}" class="flex items-center gap-3 md:flex-col md:items-center md:bg-bgLight md:rounded-2xl md:px-4 md:py-3.5 md:text-center transition hover:opacity-95">
+        <img src="/static/brand/logo-unatoppet.png" alt="UNA Top Pet" class="hidden md:block w-36 select-none" draggable="false" />
+        <div class="w-10 h-10 rounded-xl bg-bgLight overflow-hidden flex items-end justify-center shrink-0 md:hidden">
+          <img src="/static/brand/logo-mark.png" alt="UNA Top Pet" class="w-9" />
+        </div>
+        <div class="md:mt-1.5">
+          <p class="font-display font-bold leading-tight text-white md:hidden">UNA <span class="text-accent">Top Pet</span></p>
+          <p class="text-[10px] uppercase tracking-[.18em] font-semibold text-primary-200 md:text-primary-500">Área administrativa</p>
+        </div>
+      </a>
+      <!-- Ações compactas no mobile -->
+      <div class="flex items-center gap-2 md:hidden">
+        <a href="{{ url_for('admin_backup') }}" class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-accent" title="Baixar backup do banco">
+          <svg class="ico w-4 h-4"><use href="/static/brand/icons.svg#download" /></svg>
+        </a>
+        <form method="post" action="{{ url_for('admin_logout') }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+          <button class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white" title="Sair">
+            <svg class="ico w-4 h-4"><use href="/static/brand/icons.svg#logout" /></svg>
+          </button>
+        </form>
+      </div>
     </div>
-    <nav class="flex md:flex-col overflow-x-auto md:overflow-visible p-2 gap-1 text-sm">
+
+    <nav class="flex md:flex-col overflow-x-auto md:overflow-y-auto no-scrollbar p-2.5 gap-1 text-sm md:flex-1">
       {% for endpoint, args, icone, rotulo in menu %}
         {% set ativo = request.endpoint == endpoint and (not args or args.ent == request.view_args.get('ent')) %}
-        <a href="{{ url_for(endpoint, **args) }}"
-           class="whitespace-nowrap px-3 py-2 rounded-lg font-medium {{ 'bg-white text-primary' if ativo else 'text-teal-50 hover:bg-white/10' }}">
-          {{ icone }} {{ rotulo }}
+        <a href="{{ url_for(endpoint, **args) }}" class="side-link {{ 'is-active' if ativo }}">
+          <svg class="ico"><use href="/static/brand/icons.svg#{{ icone }}" /></svg>
+          <span>{{ rotulo }}</span>
         </a>
       {% endfor %}
     </nav>
-    <div class="mt-auto p-3 border-t border-white/20 text-xs space-y-2 hidden md:block">
-      <a href="{{ url_for('admin_backup') }}" class="block px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-center font-semibold">💾 Baixar backup do banco</a>
-      <p class="text-teal-100 px-1">Logado como <strong>{{ session.admin_nome }}</strong></p>
-      <form method="post" action="{{ url_for('admin_logout') }}">
-        <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
-        <button class="w-full px-3 py-2 rounded-lg bg-black/20 hover:bg-black/30 font-semibold">Sair</button>
-      </form>
+
+    <div class="mt-auto p-3.5 border-t border-white/10 text-xs space-y-2.5 hidden md:block">
+      <a href="{{ url_for('admin_backup') }}" class="flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-accent/15 hover:bg-accent/25 text-accent-200 font-semibold transition">
+        <svg class="ico w-4 h-4 text-accent"><use href="/static/brand/icons.svg#download" /></svg>
+        Baixar backup do banco
+      </a>
+      <div class="grid grid-cols-2 gap-1.5">
+        <a href="/" class="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-primary-200 font-medium transition">
+          <svg class="ico w-3.5 h-3.5"><use href="/static/brand/icons.svg#smartphone" /></svg> App
+        </a>
+        <a href="/web" class="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-primary-200 font-medium transition">
+          <svg class="ico w-3.5 h-3.5"><use href="/static/brand/icons.svg#globe" /></svg> Web
+        </a>
+      </div>
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+        <div class="min-w-0">
+          <p class="text-[10px] text-primary-300 uppercase tracking-wider">Operador</p>
+          <p class="text-xs font-semibold text-white truncate">{{ session.admin_nome }}</p>
+        </div>
+        <form method="post" action="{{ url_for('admin_logout') }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition">
+            <svg class="ico w-3.5 h-3.5"><use href="/static/brand/icons.svg#logout" /></svg> Sair
+          </button>
+        </form>
+      </div>
     </div>
   </aside>
 
-  <main class="flex-1 p-4 md:p-8 max-w-6xl w-full">
+  <main class="flex-1 p-4 sm:p-6 md:p-8 max-w-6xl w-full mx-auto">
     {% with mensagens = get_flashed_messages(with_categories=true) %}
       {% for categoria, texto in mensagens %}
-        <div class="mb-4 px-4 py-3 rounded-xl text-sm font-medium border
-                    {{ 'bg-teal-50 border-teal-200 text-teal-900' if categoria == 'ok' else 'bg-red-50 border-red-200 text-red-800' }}">
-          {{ texto }}
+        <div class="mb-5 notice {{ 'notice-danger' if categoria != 'ok' }} text-sm font-medium animate-fade-in">
+          <svg class="ico w-5 h-5 mt-0.5 {{ 'text-accent-600' if categoria == 'ok' }}"><use href="/static/brand/icons.svg#{{ 'check' if categoria == 'ok' else 'alert' }}" /></svg>
+          <span>{{ texto }}</span>
         </div>
       {% endfor %}
     {% endwith %}

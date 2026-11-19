@@ -1,6 +1,6 @@
 // ============================================================================
-// Pets Una - aplicativo do tutor (protótipo mobile ligado ao banco via /api)
-// Os dados fictícios do protótipo foram substituídos por chamadas à API Flask.
+// UNA Top Pet - aplicativo do tutor (mobile e web responsiva via /api)
+// Compartilhado por static/tutor/index.html e static/web/index.html.
 // ============================================================================
 
 const $ = (id) => document.getElementById(id);
@@ -10,10 +10,21 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => (
   { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
 ));
 
+// Helper para ícones SVG do sprite da identidade visual
+const ico = (name, cls = "") =>
+  `<svg class="ico ${cls}" aria-hidden="true"><use href="/static/brand/icons.svg#${name}"/></svg>`;
+
 let estado = { cliente: null, pets: [], servicos: [], profissionais: [], agendamentos: [], historico: [], notificacoes: [] };
 let selectedPetId = null;
 let editingPetId = null;
 let selectedAiSample = null;
+
+const TAB_META = {
+  home: { title: "Início", subtitle: "Resumo dos seus pets, avisos e próximos agendamentos" },
+  pets: { title: "Meus pets", subtitle: "Perfil, dados gerais e prontuário de saúde" },
+  agenda: { title: "Agenda", subtitle: "Acompanhe e solicite serviços no pet shop" },
+  ai: { title: "IA Vet • Triagem", subtitle: "Análise preliminar orientativa por imagem" },
+};
 
 // ---------------------------------------------------------------- utilidades
 async function api(metodo, url, corpo) {
@@ -39,6 +50,7 @@ async function api(metodo, url, corpo) {
 
 function showToast(msg, icon = "✅") {
   const toast = $("toast");
+  if (!toast) return;
   $("toast-msg").textContent = msg;
   $("toast-icon").textContent = icon;
   toast.classList.remove("hidden");
@@ -82,6 +94,12 @@ function idadeTexto(nasc) {
 
 const especieLabel = (e) => ({ Canina: "Cão", Felina: "Gato" }[e] || e);
 
+function iniciais(nome) {
+  const partes = String(nome || "").trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return "U";
+  return (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
+}
+
 // ---------------------------------------------------------------- carga dos dados
 async function carregar() {
   estado = await api("GET", "/api/dados");
@@ -92,25 +110,21 @@ async function carregar() {
 function mostrarApp() {
   $("screen-auth").classList.add("hidden");
   $("app-shell").classList.remove("hidden");
-  $("tutor-greeting").textContent = `Olá, ${estado.cliente.nome.split(" ")[0]}! 👋`;
+  const primeiroNome = estado.cliente.nome.split(" ")[0];
+  if ($("tutor-greeting")) $("tutor-greeting").textContent = `Olá, ${primeiroNome}! 👋`;
+  if ($("tutor-full-name")) $("tutor-full-name").textContent = estado.cliente.nome;
+  if ($("tutor-email")) $("tutor-email").textContent = estado.cliente.email || "";
+  if ($("tutor-initials")) $("tutor-initials").textContent = iniciais(estado.cliente.nome);
   switchTab("home");
 }
 
 // ---------------------------------------------------------------- autenticação
 function toggleAuthMode(mode) {
-  const formLogin = $("form-login");
-  const formReg = $("form-register");
-  const tabLogin = $("tab-login");
-  const tabReg = $("tab-register");
-  const ativo = "flex-1 py-2 text-sm font-semibold rounded-lg bg-white text-primary shadow-sm transition";
-  const inativo = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition";
-  if (mode === "login") {
-    formLogin.classList.remove("hidden"); formReg.classList.add("hidden");
-    tabLogin.className = ativo; tabReg.className = inativo;
-  } else {
-    formLogin.classList.add("hidden"); formReg.classList.remove("hidden");
-    tabReg.className = ativo; tabLogin.className = inativo;
-  }
+  const isLogin = mode === "login";
+  $("form-login").classList.toggle("hidden", !isLogin);
+  $("form-register").classList.toggle("hidden", isLogin);
+  $("tab-login").classList.toggle("is-active", isLogin);
+  $("tab-register").classList.toggle("is-active", !isLogin);
 }
 
 async function handleLogin(e) {
@@ -156,25 +170,26 @@ async function iniciar() {
 // ---------------------------------------------------------------- navegação
 function switchTab(tab) {
   ["home", "pets", "agenda", "ai"].forEach((t) => {
-    $(`tab-${t}`).classList.add("hidden");
-    const navBtn = $(`nav-${t}`);
-    navBtn.classList.remove("text-primary", "font-semibold");
-    navBtn.classList.add("text-slate-400", "font-medium");
+    const sec = $(`tab-${t}`);
+    if (sec) sec.classList.toggle("hidden", t !== tab);
   });
-  $(`tab-${tab}`).classList.remove("hidden");
-  const ativo = $(`nav-${tab}`);
-  ativo.classList.remove("text-slate-400", "font-medium");
-  ativo.classList.add("text-primary", "font-semibold");
+  document.querySelectorAll("[data-nav]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.nav === tab);
+  });
+  if (TAB_META[tab]) {
+    if ($("web-page-title")) $("web-page-title").textContent = TAB_META[tab].title;
+    if ($("web-page-subtitle")) $("web-page-subtitle").textContent = TAB_META[tab].subtitle;
+  }
+  const main = $("main-content");
+  if (main) main.scrollTop = 0;
 }
 
 function togglePetSubtab(sub) {
-  const ativo = "flex-1 py-2 text-xs font-semibold rounded-lg bg-white text-primary shadow-sm transition";
-  const inativo = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-600 transition";
   const hist = sub === "history";
   $("pet-history-content").classList.toggle("hidden", !hist);
   $("pet-info-content").classList.toggle("hidden", hist);
-  $("subtab-history").className = hist ? ativo : inativo;
-  $("subtab-info").className = hist ? inativo : ativo;
+  $("subtab-history").classList.toggle("is-active", hist);
+  $("subtab-info").classList.toggle("is-active", !hist);
 }
 
 // ---------------------------------------------------------------- renderização
@@ -185,16 +200,24 @@ function renderAll() {
 }
 
 function renderHome() {
+  // Contadores opcionais (usados no cabeçalho/resumo da versão web)
+  const abertos = estado.agendamentos.filter((a) => a.status === "Agendado").length;
+  const realizados = estado.agendamentos.filter((a) => a.status === "Realizado").length;
+  if ($("stat-pets")) $("stat-pets").textContent = estado.pets.length;
+  if ($("stat-agendados")) $("stat-agendados").textContent = abertos;
+  if ($("stat-realizados")) $("stat-realizados").textContent = realizados;
+  if ($("stat-notificacoes")) $("stat-notificacoes").textContent = estado.notificacoes.length;
+
   // Avisos do pet shop (ex.: animal pronto para buscar)
   $("notificacoes-box").innerHTML = estado.notificacoes.map((n) => `
-    <div class="bg-orange-50 border border-orange-200 rounded-2xl p-3.5 flex items-start gap-3">
-      <span class="text-xl">🔔</span>
-      <div class="flex-1">
-        <p class="text-xs font-bold text-orange-900">Aviso do pet shop</p>
-        <p class="text-xs text-orange-900 mt-0.5">${esc(n.mensagem)}</p>
-        <p class="text-[10px] text-orange-700 mt-1">${esc(fmtDataHora(n.data))}</p>
+    <div class="notice animate-fade-in">
+      <span class="tile-icon tile-dark w-9 h-9 rounded-xl">${ico("bell", "w-4 h-4")}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-bold text-primary-900">Aviso do pet shop</p>
+        <p class="text-xs text-primary-700 mt-0.5 leading-relaxed">${esc(n.mensagem)}</p>
+        <p class="text-[10px] text-primary-400 mt-1 flex items-center gap-1">${ico("clock", "w-3 h-3")} ${esc(fmtDataHora(n.data))}</p>
       </div>
-      <button onclick="marcarLida(${n.id})" class="text-[11px] font-bold text-orange-700 underline shrink-0">Entendi</button>
+      <button onclick="marcarLida(${n.id})" class="btn btn-lime-soft btn-xs shrink-0">Entendi</button>
     </div>`).join("");
 
   // Próximo agendamento (status Agendado, a partir de agora)
@@ -205,43 +228,59 @@ function renderHome() {
   const card = $("next-appointment-card");
   if (proximo) {
     card.innerHTML = `
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-[11px] uppercase tracking-wider font-semibold bg-white/20 px-2.5 py-0.5 rounded-full">Próximo Agendamento</span>
-        <span class="text-[11px] font-bold bg-accent px-2.5 py-0.5 rounded-full">${esc(proximo.status)}</span>
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <span class="text-[10px] uppercase tracking-[.16em] font-semibold bg-white/10 border border-white/15 px-2.5 py-1 rounded-full text-primary-100">Próximo agendamento</span>
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-accent text-primary-900">${esc(proximo.status)}</span>
       </div>
-      <h4 class="text-base font-bold">${esc(proximo.servico_nome)} • ${esc(proximo.pet_nome)} ${avatarDe(proximo.pet_especie)}</h4>
-      <p class="text-xs text-teal-100 mt-0.5">${esc(proximo.prof_nome)}${proximo.prof_especialidade ? ` (${esc(proximo.prof_especialidade)})` : ""}</p>
-      <div class="mt-3 pt-2.5 border-t border-white/20 flex items-center justify-between text-xs font-medium">
-        <span>📅 ${esc(fmtDataHora(proximo.data_hora))}</span>
-        <button onclick="switchTab('agenda')" class="underline">Ver todos</button>
+      <h4 class="text-base sm:text-lg font-bold text-white leading-snug">${esc(proximo.servico_nome)} • ${esc(proximo.pet_nome)} ${avatarDe(proximo.pet_especie)}</h4>
+      <p class="text-xs text-primary-200 mt-1">${esc(proximo.prof_nome)}${proximo.prof_especialidade ? ` (${esc(proximo.prof_especialidade)})` : ""}</p>
+      <div class="mt-4 pt-3 border-t border-white/15 flex items-center justify-between gap-2 text-xs font-medium">
+        <span class="inline-flex items-center gap-1.5 text-accent-200">${ico("calendar", "w-4 h-4 text-accent")} ${esc(fmtDataHora(proximo.data_hora))}</span>
+        <button onclick="switchTab('agenda')" class="inline-flex items-center gap-1 text-white hover:text-accent transition font-semibold">
+          Ver todos ${ico("chevron-right", "w-3.5 h-3.5")}
+        </button>
       </div>`;
   } else {
     card.innerHTML = `
-      <p class="text-[11px] uppercase tracking-wider font-semibold">Próximo Agendamento</p>
-      <h4 class="text-base font-bold mt-1">Nenhum agendamento marcado</h4>
-      <button onclick="switchTab('agenda'); openBookingModal();" class="mt-3 text-xs font-semibold underline">Agendar agora</button>`;
+      <span class="text-[10px] uppercase tracking-[.16em] font-semibold text-accent-300">Próximo agendamento</span>
+      <h4 class="text-base sm:text-lg font-bold mt-1 text-white">Nenhum agendamento marcado</h4>
+      <p class="text-xs text-primary-200 mt-1">Escolha um serviço e reserve o melhor horário para o seu pet.</p>
+      <button onclick="switchTab('agenda'); openBookingModal();" class="btn btn-accent btn-sm mt-4">
+        ${ico("calendar-plus")} Agendar agora
+      </button>`;
   }
 
-  // Lista horizontal de pets
+  // Lista de pets (scroll horizontal no mobile, grid na versão web)
   $("home-pets-list").innerHTML = estado.pets.length ? estado.pets.map((p) => `
-    <button onclick="selectedPetId=${p.id}; switchTab('pets'); renderPetsTab();" class="shrink-0 w-24 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-1.5 hover:border-primary transition">
-      <div class="w-11 h-11 rounded-full bg-teal-50 flex items-center justify-center text-2xl">${avatarDe(p.especie)}</div>
-      <span class="text-xs font-bold text-slate-700 truncate w-full text-center">${esc(p.nome)}</span>
-      <span class="text-[10px] text-slate-400">${esc(especieLabel(p.especie))}</span>
+    <button onclick="selectedPetId=${p.id}; switchTab('pets'); renderPetsTab();" class="pet-tile card card-hover p-3.5 flex flex-col items-center gap-2 text-center">
+      <div class="pet-avatar w-12 h-12 text-2xl">${avatarDe(p.especie)}</div>
+      <div class="w-full min-w-0">
+        <span class="block text-xs font-bold text-primary-900 truncate">${esc(p.nome)}</span>
+        <span class="block text-[10px] text-primary-400 truncate">${esc(especieLabel(p.especie))}</span>
+        <span class="pet-tile-extra block text-[11px] text-primary-500 mt-1 truncate">${esc(p.raca)} • ${esc(idadeTexto(p.data_nascimento))}</span>
+      </div>
     </button>`).join("")
-    : `<p class="text-xs text-slate-400 py-2">Nenhum pet cadastrado. Toque em “+ Novo Pet”.</p>`;
+    : `<div class="card p-5 text-center w-full col-span-full">
+        <p class="text-xs text-primary-400">Nenhum pet cadastrado ainda. Toque em “+ Novo pet” para começar.</p>
+       </div>`;
 }
 
 function renderPetsTab() {
   const selector = $("pets-selector");
   selector.innerHTML = estado.pets.map((p) => `
-    <button onclick="selectedPetId=${p.id}; renderPetsTab();" class="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${p.id === selectedPetId ? "bg-primary text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200"}">
-      ${avatarDe(p.especie)} ${esc(p.nome)}
+    <button onclick="selectedPetId=${p.id}; renderPetsTab();" class="pill ${p.id === selectedPetId ? "is-active" : ""}">
+      <span>${avatarDe(p.especie)}</span>
+      <span>${esc(p.nome)}</span>
     </button>`).join("");
 
   const pet = estado.pets.find((p) => p.id === selectedPetId);
   if (!pet) {
-    $("pet-profile-card").innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum pet cadastrado ainda.</p>`;
+    $("pet-profile-card").innerHTML = `
+      <div class="text-center py-6 space-y-3">
+        <div class="pet-avatar w-14 h-14 text-2xl mx-auto">🐾</div>
+        <p class="text-xs text-primary-400">Nenhum pet cadastrado ainda.</p>
+        <button onclick="openPetModal()" class="btn btn-primary btn-sm">${ico("plus")} Cadastrar primeiro pet</button>
+      </div>`;
     $("pet-history-content").innerHTML = "";
     $("pet-info-content").innerHTML = "";
     return;
@@ -249,35 +288,36 @@ function renderPetsTab() {
 
   $("pet-profile-card").innerHTML = `
     <div class="flex items-center gap-3.5">
-      <div class="w-14 h-14 rounded-2xl bg-teal-50 flex items-center justify-center text-3xl">${avatarDe(pet.especie)}</div>
-      <div class="flex-1">
-        <h3 class="text-base font-bold text-slate-800">${esc(pet.nome)}</h3>
-        <p class="text-xs text-slate-500">${esc(especieLabel(pet.especie))} • ${esc(pet.raca)}</p>
-        <div class="flex gap-2 mt-1.5">
-          ${pet.porte ? `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-semibold text-slate-600">Porte: ${esc(pet.porte)}</span>` : ""}
-          <span class="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-semibold text-slate-600">${esc(idadeTexto(pet.data_nascimento))}</span>
+      <div class="pet-avatar w-14 h-14 text-3xl">${avatarDe(pet.especie)}</div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-base font-bold text-primary-900 truncate">${esc(pet.nome)}</h3>
+        <p class="text-xs text-primary-500 truncate">${esc(especieLabel(pet.especie))} • ${esc(pet.raca)}</p>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          ${pet.porte ? `<span class="chip">Porte: ${esc(pet.porte)}</span>` : ""}
+          <span class="chip chip-lime">${esc(idadeTexto(pet.data_nascimento))}</span>
         </div>
       </div>
     </div>
-    <div class="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-      <button onclick="openPetModal(${pet.id})" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700">✏️ Editar</button>
-      <button onclick="removePet(${pet.id})" class="flex-1 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-xs font-semibold text-red-700">🗑️ Remover</button>
+    <div class="flex gap-2 mt-4 pt-3 border-t border-primary-100">
+      <button onclick="openPetModal(${pet.id})" class="btn btn-soft btn-sm flex-1">${ico("edit")} Editar</button>
+      <button onclick="removePet(${pet.id})" class="btn btn-danger btn-sm flex-1">${ico("trash")} Remover</button>
     </div>`;
 
   const hist = estado.historico.filter((h) => h.pet_id === pet.id);
   $("pet-history-content").innerHTML = hist.length ? hist.map((h) => `
-    <div class="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm space-y-1.5">
-      <div class="flex items-center justify-between">
-        <span class="px-2 py-0.5 rounded-md bg-teal-50 text-primary text-[10px] font-bold">${esc(h.tipo || "Registro")}</span>
-        <span class="text-[11px] text-slate-400">${esc(fmtData(h.data))}</span>
+    <div class="card p-4 space-y-2">
+      <div class="flex items-center justify-between gap-2">
+        <span class="chip chip-lime">${esc(h.tipo || "Registro")}</span>
+        <span class="text-[11px] text-primary-400 inline-flex items-center gap-1">${ico("calendar", "w-3.5 h-3.5")} ${esc(fmtData(h.data))}</span>
       </div>
-      <p class="text-xs font-semibold text-slate-700">${esc(h.profissional)}</p>
-      <p class="text-xs text-slate-600">${esc(h.descricao)}</p>
-      ${h.anexos.length ? `<div class="pt-1 flex flex-wrap gap-1.5">${h.anexos.map((a) => `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-[10px] font-medium text-slate-600 break-all">📎 ${esc(a)}</span>`).join("")}</div>` : ""}
+      <p class="text-xs font-bold text-primary-900">${esc(h.profissional)}</p>
+      <p class="text-xs text-primary-600 leading-relaxed">${esc(h.descricao)}</p>
+      ${h.anexos.length ? `<div class="pt-1 flex flex-wrap gap-1.5">${h.anexos.map((a) => `<span class="chip break-all">${ico("clip", "w-3 h-3")} ${esc(a)}</span>`).join("")}</div>` : ""}
     </div>`).join("")
-    : `<p class="text-xs text-slate-400 text-center py-6">Nenhum registro médico encontrado.</p>`;
+    : `<div class="card p-6 text-center"><p class="text-xs text-primary-400">Nenhum registro médico encontrado para ${esc(pet.nome)}.</p></div>`;
 
-  const linha = (rot, val, ultimo) => `<div class="flex justify-between py-1 ${ultimo ? "" : "border-b border-slate-100"}"><span class="text-slate-500">${rot}:</span><span class="font-semibold">${esc(val)}</span></div>`;
+  const linha = (rot, val, ultimo) =>
+    `<div class="flex justify-between gap-4 py-2.5 ${ultimo ? "" : "border-b border-primary-100"}"><span class="text-primary-400">${rot}</span><span class="font-semibold text-primary-900 text-right">${esc(val)}</span></div>`;
   $("pet-info-content").innerHTML =
     linha("Nome", pet.nome) + linha("Espécie", especieLabel(pet.especie)) + linha("Raça", pet.raca) +
     linha("Sexo", pet.sexo === "M" ? "Macho" : pet.sexo === "F" ? "Fêmea" : "—") +
@@ -292,22 +332,33 @@ function renderAgenda() {
     (a.status === "Agendado" ? a.data_hora.localeCompare(b.data_hora) : b.data_hora.localeCompare(a.data_hora)));
 
   $("agenda-list").innerHTML = lista.length ? lista.map((a) => {
-    const cor = a.status === "Agendado" ? "bg-orange-50 text-accent"
-      : a.status === "Realizado" ? "bg-teal-50 text-primary" : "bg-slate-100 text-slate-500";
+    const badgeCls = a.status === "Agendado" ? "badge-agendado"
+      : a.status === "Realizado" ? "badge-realizado" : "badge-cancelado";
     return `
-      <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2 ${a.status === "Cancelado" ? "opacity-60" : ""}">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-800">${esc(a.servico_nome)}</span>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${cor}">${esc(a.status)}</span>
+      <div class="card p-4 flex flex-col justify-between gap-3 ${a.status === "Cancelado" ? "opacity-60" : ""}">
+        <div class="space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <span class="text-sm font-bold text-primary-900 leading-snug">${esc(a.servico_nome)}</span>
+            <span class="badge ${badgeCls}">${esc(a.status)}</span>
+          </div>
+          <p class="text-xs text-primary-600">
+            Pet: <strong class="text-primary-900">${esc(a.pet_nome)}</strong> ${avatarDe(a.pet_especie)} • ${esc(a.prof_nome)}
+          </p>
         </div>
-        <p class="text-xs text-slate-600">Pet: <strong>${esc(a.pet_nome)}</strong> ${avatarDe(a.pet_especie)} • ${esc(a.prof_nome)}</p>
-        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-50">
-          <span>📅 ${esc(fmtDataHora(a.data_hora))}</span>
-          <span class="font-semibold text-slate-700">${esc(brl(a.preco))}</span>
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between text-xs text-primary-400 pt-2.5 border-t border-primary-100">
+            <span class="inline-flex items-center gap-1.5">${ico("calendar", "w-3.5 h-3.5 text-accent-600")} ${esc(fmtDataHora(a.data_hora))}</span>
+            <span class="font-bold text-primary-900">${esc(brl(a.preco))}</span>
+          </div>
+          ${a.status === "Agendado" ? `<button onclick="cancelarAgendamento(${a.id})" class="btn btn-danger btn-sm btn-block">${ico("x")} Cancelar agendamento</button>` : ""}
         </div>
-        ${a.status === "Agendado" ? `<button onclick="cancelarAgendamento(${a.id})" class="w-full py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold">Cancelar agendamento</button>` : ""}
       </div>`;
-  }).join("") : `<p class="text-xs text-slate-400 text-center py-8">Você ainda não tem agendamentos.</p>`;
+  }).join("") : `
+    <div class="card p-8 text-center col-span-full space-y-3">
+      <span class="tile-icon tile-mist w-12 h-12 mx-auto">${ico("calendar")}</span>
+      <p class="text-xs text-primary-400">Você ainda não tem agendamentos.</p>
+      <button onclick="openBookingModal()" class="btn btn-accent btn-sm">${ico("calendar-plus")} Agendar serviço</button>
+    </div>`;
 }
 
 // ---------------------------------------------------------------- pets (cadastrar / editar / remover)
@@ -315,7 +366,7 @@ function openPetModal(id) {
   editingPetId = id || null;
   const form = $("modal-pet").querySelector("form");
   form.reset();
-  $("pet-modal-title").textContent = editingPetId ? "Editar Pet" : "Cadastrar Novo Pet";
+  $("pet-modal-title").textContent = editingPetId ? "Editar pet" : "Cadastrar novo pet";
   if (editingPetId) {
     const p = estado.pets.find((x) => x.id === editingPetId);
     $("pet-nome").value = p.nome;
@@ -426,11 +477,12 @@ function selectAiSample(type) {
   $("ai-upload-placeholder").classList.add("hidden");
   $("ai-preview-box").classList.remove("hidden");
   $("ai-result-card").classList.add("hidden");
+  if ($("ai-empty-result")) $("ai-empty-result").classList.remove("hidden");
   if (type === "pele") {
-    $("ai-preview-img").src = "https://placehold.co/400x250/FED7AA/9A3412?text=Imagem:+Lesao+na+Pele";
+    $("ai-preview-img").src = "https://placehold.co/600x360/EEF5C8/2F3D41?text=Amostra:+Lesao+na+Pele";
     $("ai-preview-label").textContent = "Amostra selecionada: Lesão avermelhada na pele";
   } else {
-    $("ai-preview-img").src = "https://placehold.co/400x250/CCFBF1/0F766E?text=Imagem:+Olho+Irritado";
+    $("ai-preview-img").src = "https://placehold.co/600x360/E3E8EA/2F3D41?text=Amostra:+Olho+Irritado";
     $("ai-preview-label").textContent = "Amostra selecionada: Secreção e vermelhidão ocular";
   }
   $("btn-run-ai").disabled = false;
@@ -438,6 +490,7 @@ function selectAiSample(type) {
 
 function runAiAnalysis() {
   if (!selectedAiSample) return;
+  if ($("ai-empty-result")) $("ai-empty-result").classList.add("hidden");
   $("ai-loading").classList.remove("hidden");
   $("ai-result-card").classList.add("hidden");
   setTimeout(() => {
@@ -454,5 +507,14 @@ function runAiAnalysis() {
     }
   }, 1000);
 }
+
+// Fecha modais ao pressionar Esc ou clicar no fundo escuro
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { closePetModal(); closeBookingModal(); }
+});
+["modal-pet", "modal-booking"].forEach((id) => {
+  const el = $(id);
+  if (el) el.addEventListener("click", (e) => { if (e.target === el) el.classList.add("hidden"); });
+});
 
 iniciar();

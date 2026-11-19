@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2F3D41" />
+  <title>UNA Top Pet • Portal Web do Tutor</title>
+  <link rel="icon" type="image/png" href="/static/brand/favicon.png" />
+  <!-- Tailwind CSS + identidade visual UnaTopPet -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/brand/theme.js"></script>
+  <!-- Google Fonts: Inter (texto) + Poppins (títulos) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/brand/brand.css" />
+  <style>
+    /* Na versão web, os cards de pets ocupam a coluna do grid e exibem raça/idade */
+    .pet-tile { width: 100%; }
+  </style>
+</head>
+<body data-layout="web" class="bg-bgLight min-h-screen font-sans text-primary-800">
+
+  <!-- Toast global -->
+  <div id="toast" class="hidden fixed top-5 right-5 z-50 bg-primary-900 text-white text-xs sm:text-sm font-medium pl-3 pr-4 py-3 rounded-2xl shadow-lift flex items-center gap-2.5 max-w-sm leading-snug animate-fade-in">
+    <span id="toast-icon" class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0">✅</span>
+    <span id="toast-msg">Ação realizada!</span>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- TELA 1: LOGIN E CADASTRO (WEB RESPONSIVA)  -->
+  <!-- ========================================== -->
+  <div id="screen-auth" class="min-h-screen grid grid-cols-1 lg:grid-cols-12">
+
+    <!-- Painel lateral da marca (baseado em logo.jpeg) -->
+    <div class="paw-bg lg:col-span-6 xl:col-span-7 relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 lg:p-14 border-b lg:border-b-0 lg:border-r border-primary-100">
+      <!-- Topo -->
+      <div class="flex items-center justify-between gap-3 relative z-10">
+        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-800 text-white text-xs font-semibold shadow-soft">
+          <svg class="ico w-4 h-4 text-accent"><use href="/static/brand/icons.svg#globe" /></svg>
+          Portal Web do Tutor
+        </span>
+        <div class="flex items-center gap-2">
+          <a href="/" class="btn btn-outline btn-xs">
+            <svg class="ico"><use href="/static/brand/icons.svg#smartphone" /></svg> Protótipo mobile
+          </a>
+          <a href="/admin" class="btn btn-soft btn-xs">Admin</a>
+        </div>
+      </div>
+
+      <!-- Centro com logo principal -->
+      <div class="my-8 lg:my-auto max-w-xl mx-auto text-center lg:text-left relative z-10">
+        <img src="/static/brand/logo-unatoppet.png" alt="UNA Top Pet" class="w-56 sm:w-64 lg:w-72 mx-auto lg:mx-0 drop-shadow-sm select-none" draggable="false" />
+        <p class="eyebrow eyebrow-center lg:items-start lg:text-left mt-5">Tecnologia a favor do bem-estar animal</p>
+        <h1 class="text-2xl sm:text-3xl xl:text-4xl font-bold text-primary-900 mt-5 leading-tight">
+          Dados que cuidam de mais vidas.
+        </h1>
+        <p class="text-sm text-primary-500 mt-2.5 max-w-md mx-auto lg:mx-0 leading-relaxed">
+          Acompanhe o prontuário de saúde, agende serviços no pet shop e realize triagens orientativas em um só lugar.
+        </p>
+
+        <!-- Pilares visuais inspirados em logo.jpeg -->
+        <div class="hidden sm:grid grid-cols-3 gap-3 mt-8">
+          <div class="bg-white/85 backdrop-blur rounded-2xl border border-primary-100 p-3.5 text-left shadow-soft">
+            <span class="tile-icon tile-lime w-9 h-9 rounded-xl mb-2"><svg class="ico w-4 h-4"><use href="/static/brand/icons.svg#chart" /></svg></span>
+            <p class="text-xs font-bold text-primary-900">Gestão Inteligente</p>
+            <p class="text-[11px] text-primary-400 mt-0.5">Agenda e histórico sempre à mão</p>
+          </div>
+          <div class="bg-white/85 backdrop-blur rounded-2xl border border-primary-100 p-3.5 text-left shadow-soft">
+            <span class="tile-icon tile-dark w-9 h-9 rounded-xl mb-2"><svg class="ico w-4 h-4"><use href="/static/brand/icons.svg#shield" /></svg></span>
+            <p class="text-xs font-bold text-primary-900">Mais Bem-Estar</p>
+            <p class="text-[11px] text-primary-400 mt-0.5">Avisos em tempo real do pet shop</p>
+          </div>
+          <div class="bg-white/85 backdrop-blur rounded-2xl border border-primary-100 p-3.5 text-left shadow-soft">
+            <span class="tile-icon tile-ink w-9 h-9 rounded-xl mb-2"><svg class="ico w-4 h-4"><use href="/static/brand/icons.svg#cloud" /></svg></span>
+            <p class="text-xs font-bold text-primary-900">Tecnologia conectada</p>
+            <p class="text-[11px] text-primary-400 mt-0.5">Web e mobile sincronizados</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé do painel -->
+      <p class="hidden lg:block text-xs text-primary-400 relative z-10">
+        Pets mais felizes em um mundo mais conectado • <span class="text-primary-700 font-semibold">Tecnologia que aproxima corações</span>
+      </p>
+    </div>
+
+    <!-- Coluna de autenticação -->
+    <div class="lg:col-span-6 xl:col-span-5 bg-white flex items-center justify-center p-6 sm:p-10">
+      <div class="w-full max-w-md space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-primary-900">Acesse sua conta</h2>
+          <p class="text-sm text-primary-400 mt-1">Entre com seu e-mail de tutor ou crie um novo cadastro.</p>
+        </div>
+
+        <!-- Alternador Login / Cadastro -->
+        <div class="seg">
+          <button onclick="toggleAuthMode('login')" id="tab-login" class="seg-btn is-active">Entrar</button>
+          <button onclick="toggleAuthMode('register')" id="tab-register" class="seg-btn">Criar conta</button>
+        </div>
+
+        <!-- Formulário de Login -->
+        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="label" for="login-email">E-mail</label>
+            <input type="email" id="login-email" value="ana.mendes@email.com" required class="input w-full" />
+          </div>
+          <div>
+            <label class="label" for="login-senha">Senha</label>
+            <input type="password" id="login-senha" value="123456" required class="input w-full" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block">
+            Entrar no portal
+            <svg class="ico"><use href="/static/brand/icons.svg#chevron-right" /></svg>
+          </button>
+        </form>
+
+        <!-- Formulário de Cadastro (Tutor) -->
+        <form id="form-register" onsubmit="handleRegister(event)" class="hidden space-y-3.5">
+          <div>
+            <label class="label" for="reg-nome">Nome completo</label>
+            <input type="text" id="reg-nome" placeholder="Ex: Maria Oliveira" required class="input w-full" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="reg-cpf">CPF</label>
+              <input type="text" id="reg-cpf" placeholder="000.000.000-00" required class="input w-full" />
+            </div>
+            <div>
+              <label class="label" for="reg-tel">Telefone</label>
+              <input type="tel" id="reg-tel" placeholder="(31) 99999-9999" required class="input w-full" />
+            </div>
+          </div>
+          <div>
+            <label class="label" for="reg-end">Endereço</label>
+            <input type="text" id="reg-end" placeholder="Rua, número, bairro" required class="input w-full" />
+          </div>
+          <div>
+            <label class="label" for="reg-email">E-mail</label>
+            <input type="email" id="reg-email" placeholder="seu@email.com" required class="input w-full" />
+          </div>
+          <div>
+            <label class="label" for="reg-senha">Senha (mínimo 6 caracteres)</label>
+            <input type="password" id="reg-senha" minlength="6" required class="input w-full" />
+          </div>
+          <button type="submit" class="btn btn-accent btn-lg btn-block !mt-5">
+            <svg class="ico"><use href="/static/brand/icons.svg#paw" /></svg>
+            Cadastrar tutor
+          </button>
+        </form>
+
+        <div class="pt-4 border-t border-primary-100 flex items-center justify-between text-xs text-primary-400">
+          <span>UNA Top Pet</span>
+          <a href="/" class="link">Ir para o protótipo mobile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- APLICAÇÃO WEB RESPONSIVA (LOGADO)          -->
+  <!-- ========================================== -->
+  <div id="app-shell" class="hidden min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Menu Lateral (Desktop) -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-primary-100 shrink-0 sticky top-0 h-screen">
+      <div class="p-6 border-b border-primary-100 flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-bgLight border border-primary-100 overflow-hidden flex items-end justify-center shrink-0">
+          <img src="/static/brand/logo-mark.png" alt="UNA Top Pet" class="w-11" />
+        </div>
+        <div>
+          <p class="font-display font-bold text-lg leading-tight text-primary-900">UNA <span class="text-accent-600">Top Pet</span></p>
+          <p class="text-[11px] text-primary-400 font-medium">Portal web do tutor</p>
+        </div>
+      </div>
+
+      <div class="p-4">
+        <button onclick="switchTab('agenda'); openBookingModal();" class="btn btn-accent btn-md btn-block">
+          <svg class="ico"><use href="/static/brand/icons.svg#calendar-plus" /></svg> Agendar serviço
+        </button>
+      </div>
+
+      <nav class="px-4 space-y-1 flex-1">
+        <button onclick="switchTab('home')" data-nav="home" class="side-link-light is-active">
+          <svg class="ico"><use href="/static/brand/icons.svg#home" /></svg> Início
+        </button>
+        <button onclick="switchTab('pets')" data-nav="pets" class="side-link-light">
+          <svg class="ico"><use href="/static/brand/icons.svg#paw" /></svg> Meus pets
+        </button>
+        <button onclick="switchTab('agenda')" data-nav="agenda" class="side-link-light">
+          <svg class="ico"><use href="/static/brand/icons.svg#calendar" /></svg> Agenda
+        </button>
+        <button onclick="switchTab('ai')" data-nav="ai" class="side-link-light">
+          <svg class="ico"><use href="/static/brand/icons.svg#sparkles" /></svg> IA Vet
+        </button>
+      </nav>
+
+      <!-- Rodapé da sidebar: perfil do tutor e atalhos -->
+      <div class="p-4 border-t border-primary-100 space-y-3">
+        <div class="flex items-center gap-3 p-2.5 rounded-2xl bg-bgLight">
+          <div id="tutor-initials" class="w-10 h-10 rounded-full bg-primary-800 text-accent font-display font-bold text-sm flex items-center justify-center shrink-0">U</div>
+          <div class="min-w-0 flex-1">
+            <p id="tutor-full-name" class="text-xs font-bold text-primary-900 truncate">Tutor</p>
+            <p id="tutor-email" class="text-[11px] text-primary-400 truncate"></p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <a href="/" class="btn btn-outline btn-xs flex-1" title="Abrir versão mobile">
+            <svg class="ico"><use href="/static/brand/icons.svg#smartphone" /></svg> Mobile
+          </a>
+          <button onclick="logout()" class="btn btn-soft btn-xs flex-1">
+            <svg class="ico"><use href="/static/brand/icons.svg#logout" /></svg> Sair
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Coluna Principal -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <!-- Cabeçalho Mobile/Tablet -->
+      <header class="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-primary-100 px-4 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-bgLight border border-primary-100 overflow-hidden flex items-end justify-center shrink-0">
+            <img src="/static/brand/logo-mark.png" alt="UNA Top Pet" class="w-9" />
+          </div>
+          <div class="min-w-0">
+            <p class="font-display font-bold text-sm text-primary-900 leading-tight">UNA <span class="text-accent-600">Top Pet</span></p>
+            <p class="text-[11px] text-primary-400 truncate">Portal do tutor</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/" class="btn btn-outline btn-xs">
+            <svg class="ico"><use href="/static/brand/icons.svg#smartphone" /></svg> Mobile
+          </a>
+          <button onclick="logout()" title="Sair" class="btn-icon w-9 h-9">
+            <svg class="ico"><use href="/static/brand/icons.svg#logout" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Barra Superior Desktop -->
+      <header class="hidden lg:flex items-center justify-between gap-4 sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-primary-100 px-8 py-4">
+        <div>
+          <h1 id="web-page-title" class="text-xl font-bold text-primary-900 leading-tight">Início</h1>
+          <p id="web-page-subtitle" class="text-xs text-primary-400 mt-0.5">Resumo dos seus pets, avisos e próximos agendamentos</p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button onclick="openPetModal()" class="btn btn-outline btn-sm">
+            <svg class="ico"><use href="/static/brand/icons.svg#plus" /></svg> Novo pet
+          </button>
+          <button onclick="openBookingModal()" class="btn btn-primary btn-sm">
+            <svg class="ico"><use href="/static/brand/icons.svg#calendar-plus" /></svg> Novo agendamento
+          </button>
+        </div>
+      </header>
+
+      <!-- Área de Conteúdo -->
+      <main id="main-content" class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-10">
+        <div class="max-w-6xl mx-auto">
+
+          <!-- ================================== -->
+          <!-- TELA 2: INÍCIO (DASHBOARD WEB)     -->
+          <!-- ================================== -->
+          <section id="tab-home" class="space-y-6 animate-fade-in">
+            <!-- Boas-vindas + indicadores rápidos -->
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <p class="text-xs text-primary-400 font-medium">Bem-vindo de volta,</p>
+                <h2 id="tutor-greeting" class="text-2xl font-bold text-primary-900">Olá! 👋</h2>
+              </div>
+              <div class="grid grid-cols-4 gap-2 sm:gap-3">
+                <div class="bg-white border border-primary-100 rounded-2xl px-3.5 py-2.5 text-center shadow-soft">
+                  <p id="stat-pets" class="text-lg font-display font-bold text-primary-900">0</p>
+                  <p class="text-[10px] text-primary-400 font-medium">Pets</p>
+                </div>
+                <div class="bg-white border border-primary-100 rounded-2xl px-3.5 py-2.5 text-center shadow-soft">
+                  <p id="stat-agendados" class="text-lg font-display font-bold text-accent-600">0</p>
+                  <p class="text-[10px] text-primary-400 font-medium">Agendados</p>
+                </div>
+                <div class="bg-white border border-primary-100 rounded-2xl px-3.5 py-2.5 text-center shadow-soft">
+                  <p id="stat-realizados" class="text-lg font-display font-bold text-primary-700">0</p>
+                  <p class="text-[10px] text-primary-400 font-medium">Realizados</p>
+                </div>
+                <div class="bg-white border border-primary-100 rounded-2xl px-3.5 py-2.5 text-center shadow-soft">
+                  <p id="stat-notificacoes" class="text-lg font-display font-bold text-primary-900">0</p>
+                  <p class="text-[10px] text-primary-400 font-medium">Avisos</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Avisos do pet shop -->
+            <div id="notificacoes-box" class="space-y-2.5"></div>
+
+            <!-- Grade principal responsiva -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <!-- Coluna principal -->
+              <div class="lg:col-span-7 space-y-6">
+                <!-- Card Destaque: Próximo Agendamento -->
+                <div id="next-appointment-card" class="hero-card p-6">
+                  <!-- Preenchido via JS -->
+                </div>
+
+                <!-- Seus Pets -->
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-bold text-primary-900">Seus pets</h3>
+                    <button onclick="openPetModal()" class="btn btn-lime-soft btn-xs">
+                      <svg class="ico"><use href="/static/brand/icons.svg#plus" /></svg> Novo pet
+                    </button>
+                  </div>
+                  <div id="home-pets-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Preenchido via JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Coluna lateral -->
+              <div class="lg:col-span-5 space-y-6">
+                <div>
+                  <h3 class="text-base font-bold text-primary-900 mb-3">Atalhos rápidos</h3>
+                  <div class="grid grid-cols-2 gap-3">
+                    <button onclick="switchTab('agenda'); openBookingModal();" class="card card-hover p-4 flex flex-col items-start gap-3 text-left">
+                      <span class="tile-icon tile-lime"><svg class="ico"><use href="/static/brand/icons.svg#calendar-plus" /></svg></span>
+                      <span>
+                        <span class="block text-xs font-bold text-primary-900">Novo agendamento</span>
+                        <span class="block text-[11px] text-primary-400 mt-0.5">Banho, tosa e consultas</span>
+                      </span>
+                    </button>
+                    <button onclick="switchTab('ai')" class="card card-hover p-4 flex flex-col items-start gap-3 text-left">
+                      <span class="tile-icon tile-dark"><svg class="ico"><use href="/static/brand/icons.svg#sparkles" /></svg></span>
+                      <span>
+                        <span class="block text-xs font-bold text-primary-900">Triagem por IA</span>
+                        <span class="block text-[11px] text-primary-400 mt-0.5">Análise preliminar por foto</span>
+                      </span>
+                    </button>
+                    <button onclick="switchTab('pets')" class="card card-hover p-4 flex flex-col items-start gap-3 text-left">
+                      <span class="tile-icon tile-ink"><svg class="ico"><use href="/static/brand/icons.svg#stethoscope" /></svg></span>
+                      <span>
+                        <span class="block text-xs font-bold text-primary-900">Histórico médico</span>
+                        <span class="block text-[11px] text-primary-400 mt-0.5">Prontuário completo</span>
+                      </span>
+                    </button>
+                    <button onclick="switchTab('agenda')" class="card card-hover p-4 flex flex-col items-start gap-3 text-left">
+                      <span class="tile-icon tile-mist"><svg class="ico"><use href="/static/brand/icons.svg#scissors" /></svg></span>
+                      <span>
+                        <span class="block text-xs font-bold text-primary-900">Serviços</span>
+                        <span class="block text-[11px] text-primary-400 mt-0.5">Ver toda a agenda</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Card institucional suave -->
+                <div class="paw-bg rounded-[22px] border border-primary-100 p-5 flex items-center gap-4">
+                  <img src="/static/brand/logo-unatoppet.png" alt="UNA Top Pet" class="w-24 shrink-0 select-none" draggable="false" />
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-primary-900">Tecnologia que aproxima corações</p>
+                    <p class="text-[11px] text-primary-500 mt-1 leading-relaxed">Seus agendamentos, avisos e prontuário ficam sempre sincronizados com a clínica.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================== -->
+          <!-- TELA 3: PETS (PERFIL E HISTÓRICO)  -->
+          <!-- ================================== -->
+          <section id="tab-pets" class="hidden space-y-5 animate-fade-in">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h2 class="text-xl font-bold text-primary-900 lg:hidden">Perfil do pet</h2>
+                <p class="text-xs text-primary-400">Selecione um pet para consultar dados e histórico de saúde.</p>
+              </div>
+              <button onclick="openPetModal()" class="btn btn-primary btn-sm">
+                <svg class="ico"><use href="/static/brand/icons.svg#plus" /></svg> Novo pet
+              </button>
+            </div>
+
+            <!-- Seletor de Pets -->
+            <div id="pets-selector" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <!-- Preenchido via JS -->
+            </div>
+
+            <!-- Layout em 2 colunas no desktop -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div class="lg:col-span-4 space-y-4">
+                <div id="pet-profile-card" class="card p-5">
+                  <!-- Preenchido via JS -->
+                </div>
+              </div>
+
+              <div class="lg:col-span-8 space-y-4">
+                <div class="seg max-w-md">
+                  <button onclick="togglePetSubtab('history')" id="subtab-history" class="seg-btn text-xs is-active">Prontuário / Histórico</button>
+                  <button onclick="togglePetSubtab('info')" id="subtab-info" class="seg-btn text-xs">Dados gerais</button>
+                </div>
+
+                <!-- Prontuário / Histórico -->
+                <div id="pet-history-content" class="space-y-3">
+                  <!-- Preenchido via JS -->
+                </div>
+
+                <!-- Dados Gerais -->
+                <div id="pet-info-content" class="hidden card p-5 space-y-1 text-sm">
+                  <!-- Preenchido via JS -->
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================== -->
+          <!-- TELA 4: AGENDA                     -->
+          <!-- ================================== -->
+          <section id="tab-agenda" class="hidden space-y-5 animate-fade-in">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h2 class="text-xl font-bold text-primary-900 lg:hidden">Agenda</h2>
+                <p class="text-xs text-primary-400">Acompanhe seus serviços agendados, realizados ou cancelados.</p>
+              </div>
+              <button onclick="openBookingModal()" class="btn btn-accent btn-sm">
+                <svg class="ico"><use href="/static/brand/icons.svg#calendar-plus" /></svg> Agendar serviço
+              </button>
+            </div>
+
+            <!-- Grade responsiva de agendamentos -->
+            <div id="agenda-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <!-- Preenchido via JS -->
+            </div>
+          </section>
+
+          <!-- ================================== -->
+          <!-- TELA 5: IA VET (TRIAGEM)           -->
+          <!-- ================================== -->
+          <section id="tab-ai" class="hidden space-y-5 animate-fade-in">
+            <div>
+              <span class="chip chip-dark mb-2"><svg class="ico w-3.5 h-3.5 text-accent"><use href="/static/brand/icons.svg#sparkles" /></svg> Triagem inteligente</span>
+              <h2 class="text-xl font-bold text-primary-900 lg:hidden">IA Vet • Triagem Inteligente</h2>
+              <p class="text-xs text-primary-400">Envie uma foto ou escolha uma amostra para receber uma orientação preliminar.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <!-- Upload / Amostras -->
+              <div class="lg:col-span-6 bg-white rounded-[22px] p-6 border-2 border-dashed border-primary-200 text-center space-y-4">
+                <div id="ai-preview-box" class="hidden">
+                  <img id="ai-preview-img" src="" alt="Preview" class="w-full h-56 object-cover rounded-2xl mb-3" />
+                  <p id="ai-preview-label" class="text-xs font-semibold text-primary-700"></p>
+                </div>
+                <div id="ai-upload-placeholder" class="py-8">
+                  <span class="tile-icon tile-lime w-16 h-16 rounded-full mx-auto mb-3"><svg class="ico w-7 h-7"><use href="/static/brand/icons.svg#camera" /></svg></span>
+                  <p class="text-sm font-bold text-primary-900">Selecione uma imagem de exemplo</p>
+                  <p class="text-xs text-primary-400 mt-1">Teste a simulação de triagem da IA Vet abaixo.</p>
+                </div>
+
+                <div class="flex gap-2.5 justify-center flex-wrap">
+                  <button onclick="selectAiSample('pele')" class="btn btn-outline btn-sm">
+                    <svg class="ico"><use href="/static/brand/icons.svg#paw" /></svg> Lesão na pele
+                  </button>
+                  <button onclick="selectAiSample('olho')" class="btn btn-outline btn-sm">
+                    <svg class="ico"><use href="/static/brand/icons.svg#eye" /></svg> Olho irritado
+                  </button>
+                </div>
+
+                <button onclick="runAiAnalysis()" id="btn-run-ai" class="btn btn-primary btn-lg btn-block" disabled>
+                  <svg class="ico"><use href="/static/brand/icons.svg#sparkles" /></svg> Analisar com IA
+                </button>
+              </div>
+
+              <!-- Coluna de Resultado -->
+              <div class="lg:col-span-6 space-y-4">
+                <!-- Estado vazio antes de analisar -->
+                <div id="ai-empty-result" class="card p-8 text-center space-y-3">
+                  <span class="tile-icon tile-mist w-14 h-14 rounded-2xl mx-auto"><svg class="ico w-6 h-6"><use href="/static/brand/icons.svg#stethoscope" /></svg></span>
+                  <h3 class="text-sm font-bold text-primary-900">Aguardando imagem</h3>
+                  <p class="text-xs text-primary-400 max-w-xs mx-auto leading-relaxed">
+                    Selecione uma das amostras ao lado e clique em <strong>Analisar com IA</strong> para visualizar o nível de confiança e a recomendação.
+                  </p>
+                </div>
+
+                <!-- Loading da IA -->
+                <div id="ai-loading" class="hidden card p-8 text-center">
+                  <div class="spinner mx-auto mb-3"></div>
+                  <p class="text-sm font-semibold text-primary-700">Processando imagem com IA Vet...</p>
+                </div>
+
+                <!-- Card de Resultado -->
+                <div id="ai-result-card" class="hidden card p-6 space-y-4 animate-fade-in">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-primary-800 uppercase tracking-[.16em]">Resultado da análise</span>
+                    <span id="ai-confidence-badge" class="badge badge-agendado badge-plain">89% confiança</span>
+                  </div>
+
+                  <div class="w-full bg-primary-50 h-2.5 rounded-full overflow-hidden">
+                    <div id="ai-confidence-bar" class="bg-gradient-to-r from-accent-500 to-accent-300 h-full rounded-full transition-all duration-500" style="width: 89%"></div>
+                  </div>
+
+                  <p id="ai-result-text" class="text-sm text-primary-700 leading-relaxed"></p>
+
+                  <div class="notice notice-warn text-xs p-3.5">
+                    <svg class="ico w-4 h-4 mt-0.5"><use href="/static/brand/icons.svg#alert" /></svg>
+                    <p><strong>Aviso:</strong> Esta análise é apenas orientativa e não substitui a avaliação presencial de um médico veterinário.</p>
+                  </div>
+
+                  <button onclick="switchTab('agenda'); openBookingModal();" class="btn btn-accent btn-lg btn-block">
+                    <svg class="ico"><use href="/static/brand/icons.svg#stethoscope" /></svg> Agendar consulta com veterinário
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- Barra de Navegação Inferior (Mobile / Tablet) -->
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-primary-100 h-[70px] px-3 flex items-center justify-around z-30">
+      <button onclick="switchTab('home')" data-nav="home" class="tabbar-item is-active">
+        <span class="tabbar-ico"><svg class="ico"><use href="/static/brand/icons.svg#home" /></svg></span>
+        <span>Início</span>
+      </button>
+      <button onclick="switchTab('pets')" data-nav="pets" class="tabbar-item">
+        <span class="tabbar-ico"><svg class="ico"><use href="/static/brand/icons.svg#paw" /></svg></span>
+        <span>Pets</span>
+      </button>
+      <button onclick="switchTab('agenda')" data-nav="agenda" class="tabbar-item">
+        <span class="tabbar-ico"><svg class="ico"><use href="/static/brand/icons.svg#calendar" /></svg></span>
+        <span>Agenda</span>
+      </button>
+      <button onclick="switchTab('ai')" data-nav="ai" class="tabbar-item">
+        <span class="tabbar-ico"><svg class="ico"><use href="/static/brand/icons.svg#sparkles" /></svg></span>
+        <span>IA Vet</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: CADASTRAR / EDITAR PET              -->
+  <!-- ========================================== -->
+  <div id="modal-pet" class="hidden fixed inset-0 bg-primary-900/50 backdrop-blur-[2px] z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] p-6 space-y-4 shadow-lift animate-sheet">
+      <div class="w-10 h-1.5 rounded-full bg-primary-100 mx-auto -mt-1 sm:hidden"></div>
+      <div class="flex items-center gap-3">
+        <span class="tile-icon tile-lime"><svg class="ico"><use href="/static/brand/icons.svg#paw" /></svg></span>
+        <h3 id="pet-modal-title" class="flex-1 text-lg font-bold text-primary-900">Cadastrar novo pet</h3>
+        <button onclick="closePetModal()" class="btn-icon w-9 h-9" title="Fechar">
+          <svg class="ico"><use href="/static/brand/icons.svg#x" /></svg>
+        </button>
+      </div>
+      <form onsubmit="handleSavePet(event)" class="space-y-3.5">
+        <div>
+          <label class="label" for="pet-nome">Nome do pet</label>
+          <input type="text" id="pet-nome" placeholder="Ex: Thor" required class="input w-full" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="label" for="pet-especie">Espécie</label>
+            <select id="pet-especie" class="input w-full">
+              <option value="Canina">Cão</option>
+              <option value="Felina">Gato</option>
+              <option value="Ave">Ave</option>
+              <option value="Outra">Outro</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="pet-raca">Raça</label>
+            <input type="text" id="pet-raca" placeholder="Ex: Labrador" required class="input w-full" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="label" for="pet-porte">Porte</label>
+            <select id="pet-porte" class="input w-full">
+              <option value="Pequeno">Pequeno</option>
+              <option value="Médio">Médio</option>
+              <option value="Grande">Grande</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="pet-sexo">Sexo</label>
+            <select id="pet-sexo" class="input w-full">
+              <option value="M">Macho</option>
+              <option value="F">Fêmea</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="label" for="pet-nasc">Data de nascimento (opcional)</label>
+            <input type="date" id="pet-nasc" class="input w-full" />
+          </div>
+        </div>
+        <div class="flex gap-2.5 pt-2">
+          <button type="button" onclick="closePetModal()" class="btn btn-soft btn-lg flex-1">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-lg flex-1">
+            <svg class="ico"><use href="/static/brand/icons.svg#check" /></svg> Salvar pet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: NOVO AGENDAMENTO                    -->
+  <!-- ========================================== -->
+  <div id="modal-booking" class="hidden fixed inset-0 bg-primary-900/50 backdrop-blur-[2px] z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] p-6 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar shadow-lift animate-sheet">
+      <div class="w-10 h-1.5 rounded-full bg-primary-100 mx-auto -mt-1 sm:hidden"></div>
+      <div class="flex items-center gap-3">
+        <span class="tile-icon tile-dark"><svg class="ico"><use href="/static/brand/icons.svg#calendar-plus" /></svg></span>
+        <h3 class="flex-1 text-lg font-bold text-primary-900">Novo agendamento</h3>
+        <button onclick="closeBookingModal()" class="btn-icon w-9 h-9" title="Fechar">
+          <svg class="ico"><use href="/static/brand/icons.svg#x" /></svg>
+        </button>
+      </div>
+      <form onsubmit="handleAddBooking(event)" class="space-y-3.5">
+        <div>
+          <label class="label" for="book-pet">1. Escolha o pet</label>
+          <select id="book-pet" class="input w-full"></select>
+        </div>
+        <div>
+          <label class="label" for="book-service">2. Escolha o serviço</label>
+          <select id="book-service" onchange="updateBookingProfs()" class="input w-full"></select>
+        </div>
+        <div>
+          <label class="label" for="book-prof">3. Escolha o profissional</label>
+          <select id="book-prof" class="input w-full"></select>
+        </div>
+        <div>
+          <label class="label" for="book-datetime">4. Data e horário</label>
+          <input type="datetime-local" id="book-datetime" required class="input w-full" />
+        </div>
+        <p class="text-xs text-primary-400 flex gap-1.5">
+          <svg class="ico w-4 h-4 mt-px text-accent-600"><use href="/static/brand/icons.svg#info" /></svg>
+          O horário é conferido com a agenda do profissional e o funcionamento do pet shop ao confirmar.
+        </p>
+        <div class="flex gap-2.5 pt-2">
+          <button type="button" onclick="closeBookingModal()" class="btn btn-soft btn-lg flex-1">Cancelar</button>
+          <button type="submit" class="btn btn-accent btn-lg flex-1">
+            <svg class="ico"><use href="/static/brand/icons.svg#check" /></svg> Confirmar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Mesma lógica do protótipo mobile, conectada à API Flask -->
+  <script src="/static/tutor/app.js"></script>
+</body>
+</html>
